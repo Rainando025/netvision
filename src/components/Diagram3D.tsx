@@ -346,9 +346,9 @@ function createProceduralRack(units: number, rackType: "closed" | "open" = "clos
     const innerWidth = 5.2;
 
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x08090a, metalness: 0.8, roughness: 0.35 });
-  const postMat = new THREE.MeshStandardMaterial({ color: 0x0d0e10, metalness: 0.7, roughness: 0.4 });
-  const railHoleMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  const silverMetalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x0d0e10, metalness: 0.7, roughness: 0.4 });
+    const railHoleMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const silverMetalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
 
     // 1. Heavy Floor Base Feet (Protruding Base Stabilizers)
     const baseLegGeo = new THREE.BoxGeometry(0.35, 0.22, rackDepth);
@@ -1052,9 +1052,9 @@ function createProceduralServer(diskCount: number) {
 
   // Rack ear holes
   const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  for(let i=0; i<2; i++) {
+  for (let i = 0; i < 2; i++) {
     const holeL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.25), holeMat);
-    holeL.position.set(-width / 2 - 0.08, 0.25 - i*0.5, depth / 2 - 0.1);
+    holeL.position.set(-width / 2 - 0.08, 0.25 - i * 0.5, depth / 2 - 0.1);
     const holeR = holeL.clone(); holeR.position.x = width / 2 + 0.08;
     group.add(holeL, holeR);
   }
@@ -1083,7 +1083,7 @@ function createProceduralServer(diskCount: number) {
     const drive = new THREE.Mesh(driveGeo, driveMat);
     drive.position.set(px, 0, depth / 2 + 0.08);
     group.add(drive);
-    
+
     // Vertical Handle
     const handle = new THREE.Mesh(driveHandleGeo, driveHandleMat);
     handle.position.set(px - 0.06, 0, depth / 2 + 0.1);
@@ -1104,7 +1104,7 @@ function createProceduralServer(diskCount: number) {
   cdTray.position.set(0.2, 0.25, depth / 2 + 0.08);
   group.add(cdTray);
   const cdBtn = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.02), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-  cdBtn.position.set(0.2 + cdW/2 + 0.05, 0.25, depth / 2 + 0.08);
+  cdBtn.position.set(0.2 + cdW / 2 + 0.05, 0.25, depth / 2 + 0.08);
   group.add(cdBtn);
 
   // Port Cluster (bottom center)
@@ -1115,18 +1115,18 @@ function createProceduralServer(diskCount: number) {
   vga.position.set(portGroupX - 0.4, portGroupY, depth / 2 + 0.08);
   group.add(vga);
   // USB ports
-  for(let i=0; i<2; i++) {
+  for (let i = 0; i < 2; i++) {
     const usb = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 0.02), new THREE.MeshStandardMaterial({ color: 0x000000 }));
-    usb.position.set(portGroupX - 0.15, portGroupY + 0.05 - i*0.1, depth / 2 + 0.08);
+    usb.position.set(portGroupX - 0.15, portGroupY + 0.05 - i * 0.1, depth / 2 + 0.08);
     group.add(usb);
   }
   // RJ45 Ports (2x4)
   const rjMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
   const rjBorder = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 });
-  for(let row=0; row<2; row++) {
-    for(let col=0; col<4; col++) {
-      const px = portGroupX + 0.1 + col*0.16;
-      const py = portGroupY + 0.08 - row*0.16;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 4; col++) {
+      const px = portGroupX + 0.1 + col * 0.16;
+      const py = portGroupY + 0.08 - row * 0.16;
       const b = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.01), rjBorder);
       b.position.set(px, py, depth / 2 + 0.08);
       group.add(b);
@@ -1143,11 +1143,11 @@ function createProceduralServer(diskCount: number) {
   const grill = new THREE.Mesh(new THREE.BoxGeometry(grillW, grillH, 0.02), new THREE.MeshStandardMaterial({ color: 0x050505 }));
   grill.position.set(width / 2 - 0.85, 0, depth / 2 + 0.08);
   group.add(grill);
-  
+
   // Grill hex/holes pattern (represented by vertical bars for simplicity)
-  for(let i=0; i<12; i++) {
+  for (let i = 0; i < 12; i++) {
     const bar = new THREE.Mesh(new THREE.BoxGeometry(0.04, grillH, 0.02), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-    bar.position.set(width / 2 - 1.4 + i*0.1, 0, depth / 2 + 0.085);
+    bar.position.set(width / 2 - 1.4 + i * 0.1, 0, depth / 2 + 0.085);
     group.add(bar);
   }
 
@@ -1168,9 +1168,9 @@ function createProceduralServer(diskCount: number) {
 
   // Status LEDs (Warning/Fault/ID)
   const ledColors = [0x3b82f6, 0xf59e0b, 0xef4444];
-  for(let i=0; i<3; i++) {
+  for (let i = 0; i < 3; i++) {
     const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 0.01), new THREE.MeshBasicMaterial({ color: ledColors[i] }));
-    l.position.set(width / 2 - 0.15, 0.0 - i*0.1, depth / 2 + 0.091);
+    l.position.set(width / 2 - 0.15, 0.0 - i * 0.1, depth / 2 + 0.091);
     group.add(l);
     leds.push(l);
   }
@@ -1610,6 +1610,33 @@ function createProceduralRectifier(modulesCount: number) {
   frontGroup.position.set(0, 0, depth / 2 + 0.05);
   group.add(frontGroup);
 
+  // Rack Mount Ears (Abas de fixação)
+  const earMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.4 });
+  const earW = 0.2;
+  const earH = height;
+  const earD = 0.05;
+  const leftEar = new THREE.Mesh(new THREE.BoxGeometry(earW, earH, earD), earMat);
+  leftEar.position.set(-width / 2 - earW / 2, 0, depth / 2 + 0.05);
+  group.add(leftEar);
+
+  const rightEar = leftEar.clone();
+  rightEar.position.set(width / 2 + earW / 2, 0, depth / 2 + 0.05);
+  group.add(rightEar);
+
+  // Mounting Screws on Ears
+  const screwMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.3 });
+  const screwGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.02, 12);
+  screwGeo.rotateX(Math.PI / 2);
+  [-1, 1].forEach((ySign) => {
+    const sY = ySign * (earH / 2 - 0.2);
+    const sl = new THREE.Mesh(screwGeo, screwMat);
+    sl.position.set(-width / 2 - earW / 2, sY, depth / 2 + 0.05 + earD / 2 + 0.01);
+    group.add(sl);
+    const sr = sl.clone();
+    sr.position.set(width / 2 + earW / 2, sY, depth / 2 + 0.05 + earD / 2 + 0.01);
+    group.add(sr);
+  });
+
   // Top Section (Controller & Rectifier Modules)
   const topH = 0.6;
   const topY = height / 2 - topH / 2 - 0.1;
@@ -1623,7 +1650,7 @@ function createProceduralRectifier(modulesCount: number) {
   const lcd = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.12), new THREE.MeshBasicMaterial({ color: 0x88c0d0 }));
   lcd.position.set(-width / 2 + ctrlW / 2 + 0.2, topY + 0.1, 0);
   frontGroup.add(lcd);
-  
+
   // Controller LED
   const led = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
   led.rotation.x = Math.PI / 2;
@@ -1635,7 +1662,7 @@ function createProceduralRectifier(modulesCount: number) {
   const fanMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
   const modW = 0.8;
   const startX = -width / 2 + ctrlW + 0.6;
-  for(let i=0; i<Math.min(modulesCount, 4); i++) {
+  for (let i = 0; i < Math.min(modulesCount, 4); i++) {
     const mod = new THREE.Mesh(new THREE.BoxGeometry(modW - 0.05, topH, 0.1), modMat);
     mod.position.set(startX + i * modW, topY, 0);
     frontGroup.add(mod);
@@ -1661,11 +1688,11 @@ function createProceduralRectifier(modulesCount: number) {
 
   const breakerMat = new THREE.MeshStandardMaterial({ color: 0x81a1c1, roughness: 0.2 });
   const breakerBodyMat = new THREE.MeshStandardMaterial({ color: 0xd8dee9, roughness: 0.5 });
-  for(let i=0; i<5; i++) {
+  for (let i = 0; i < 5; i++) {
     const bBody = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.4, 0.15), breakerBodyMat);
     bBody.position.set(-width / 4 + i * 0.4, midY, 0.05);
     frontGroup.add(bBody);
-    
+
     const bToggle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.2), breakerMat);
     bToggle.position.set(-width / 4 + i * 0.4, midY + 0.05, 0.1);
     frontGroup.add(bToggle);
@@ -2772,10 +2799,12 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         }
       }
 
-      // Add text label sprite
-      const labelSprite = createTextSprite(node.data.name || "Dispositivo");
-      labelSprite.position.set(0, 1.5, 0); // Position slightly above
-      deviceGroup.add(labelSprite);
+      // Add text label sprite (only if not inside a rack)
+      if (!node.data.rackId) {
+        const labelSprite = createTextSprite(node.data.name || "Dispositivo");
+        labelSprite.position.set(0, 1.5, 0); // Position slightly above
+        deviceGroup.add(labelSprite);
+      }
 
       if (node.data.rackId) {
         const rackGroup = threeNodesRef.current.get(node.data.rackId);
@@ -3188,7 +3217,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           >
             <Eye className="w-4 h-4 text-emerald-500" />
           </button>
-          
+
           <button
             onClick={moveCameraUp}
             className="flex items-center justify-center p-2 rounded-lg bg-secondary/80 border border-border/60 hover:bg-secondary transition"

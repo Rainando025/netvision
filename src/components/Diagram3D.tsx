@@ -345,10 +345,10 @@ function createProceduralRack(units: number, rackType: "closed" | "open" = "clos
     const rackDepth = 2.4; // Base feet depth
     const innerWidth = 5.2;
 
-    const steelMat = new THREE.MeshStandardMaterial({ color: 0x161719, metalness: 0.5, roughness: 0.4 });
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x1e2023, metalness: 0.6, roughness: 0.35 });
-    const railHoleMat = new THREE.MeshBasicMaterial({ color: 0x050506 });
-    const silverMetalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x08090a, metalness: 0.8, roughness: 0.35 });
+  const postMat = new THREE.MeshStandardMaterial({ color: 0x0d0e10, metalness: 0.7, roughness: 0.4 });
+  const railHoleMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  const silverMetalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
 
     // 1. Heavy Floor Base Feet (Protruding Base Stabilizers)
     const baseLegGeo = new THREE.BoxGeometry(0.35, 0.22, rackDepth);
@@ -458,10 +458,10 @@ function createProceduralRack(units: number, rackType: "closed" | "open" = "clos
   const rackDepth = 4.0;
 
   // Outer cabinet materials matching Photo 1
-  const outerCabinetMat = new THREE.MeshStandardMaterial({ color: 0x0d0e10, metalness: 0.35, roughness: 0.55 });
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x141518, metalness: 0.4, roughness: 0.5 });
+  const outerCabinetMat = new THREE.MeshStandardMaterial({ color: 0x060708, metalness: 0.85, roughness: 0.35 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0c, metalness: 0.8, roughness: 0.4 });
   const innerRailMat = new THREE.MeshStandardMaterial({ color: 0xa0a8b2, metalness: 0.8, roughness: 0.25 });
-  const ventSlotMat = new THREE.MeshBasicMaterial({ color: 0x040405 });
+  const ventSlotMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
   const lockSilverMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.85, roughness: 0.15 });
 
   // Base and Top Caps
@@ -1030,60 +1030,150 @@ function createProceduralServer(diskCount: number) {
   const depth = 3.4;
   const height = 0.9;
 
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xea580c, metalness: 0.2, roughness: 0.25 });
+  // Main chassis - dark metallic
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0c, metalness: 0.6, roughness: 0.4 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), bodyMat);
   body.castShadow = true;
   body.receiveShadow = true;
   group.add(body);
 
-  const bezelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.2, roughness: 0.2 });
-  const bezel = new THREE.Mesh(new THREE.BoxGeometry(width + 0.06, height + 0.04, 0.07), bezelMat);
-  bezel.position.set(0, 0, depth / 2 + 0.035);
+  // Front bezel (black metallic)
+  const bezelMat = new THREE.MeshStandardMaterial({ color: 0x050506, metalness: 0.7, roughness: 0.3 });
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(width + 0.02, height - 0.02, 0.08), bezelMat);
+  bezel.position.set(0, 0, depth / 2 + 0.04);
   group.add(bezel);
 
-  const earMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.2, roughness: 0.4 });
-  const earL = new THREE.Mesh(new THREE.BoxGeometry(0.16, height, 0.32), earMat);
-  earL.position.set(-width / 2 - 0.08, 0, depth / 2 - 0.16);
+  // Rack ears
+  const earMat = new THREE.MeshStandardMaterial({ color: 0x050506, metalness: 0.8, roughness: 0.2 });
+  const earL = new THREE.Mesh(new THREE.BoxGeometry(0.16, height, 0.2), earMat);
+  earL.position.set(-width / 2 - 0.08, 0, depth / 2 - 0.1);
   const earR = earL.clone(); earR.position.x = width / 2 + 0.08;
   group.add(earL, earR);
 
-  const grill = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.75, 0.01), new THREE.MeshBasicMaterial({ color: 0x020617 }));
-  grill.position.set(-1.05, 0, depth / 2 + 0.045);
-  group.add(grill);
+  // Rack ear holes
+  const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  for(let i=0; i<2; i++) {
+    const holeL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.25), holeMat);
+    holeL.position.set(-width / 2 - 0.08, 0.25 - i*0.5, depth / 2 - 0.1);
+    const holeR = holeL.clone(); holeR.position.x = width / 2 + 0.08;
+    group.add(holeL, holeR);
+  }
 
-  const driveW = 0.35;
-  const driveH = 0.7;
-  const driveGeo = new THREE.BoxGeometry(driveW, driveH, 0.04);
-  const driveMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, metalness: 0.2, roughness: 0.4 });
-  const handleGeo = new THREE.BoxGeometry(driveW - 0.05, 0.05, 0.02);
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.2 });
-  const ledGeo = new THREE.BoxGeometry(0.03, 0.03, 0.01);
-  const ledMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
+  // Handle extrusions on ears
+  const handleL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.15), bezelMat);
+  handleL.position.set(-width / 2 - 0.03, 0, depth / 2 + 0.1);
+  const handleR = handleL.clone(); handleR.position.x = width / 2 + 0.03;
+  group.add(handleL, handleR);
+
   const leds: THREE.Mesh[] = [];
 
-  const startX = 0.2;
-  const maxDrives = Math.min(diskCount, 12);
-  for (let i = 0; i < maxDrives; i++) {
-    const px = startX + i * 0.4;
+  // Left Section: 8 vertical drive bays
+  const driveW = 0.22;
+  const driveH = height - 0.15;
+  const driveGeo = new THREE.BoxGeometry(driveW, driveH, 0.04);
+  const driveMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1c, metalness: 0.5, roughness: 0.6 });
+  const driveHandleGeo = new THREE.BoxGeometry(0.04, driveH - 0.1, 0.03);
+  const driveHandleMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.6, roughness: 0.4 });
+  const ledGeo = new THREE.BoxGeometry(0.02, 0.02, 0.01);
+  const ledMat = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+
+  const startX = -width / 2 + 0.3;
+  for (let i = 0; i < 8; i++) {
+    const px = startX + i * 0.26;
     const drive = new THREE.Mesh(driveGeo, driveMat);
-    drive.position.set(px, 0, depth / 2 + 0.03);
+    drive.position.set(px, 0, depth / 2 + 0.08);
     group.add(drive);
-    const handle = new THREE.Mesh(handleGeo, handleMat);
-    handle.position.set(px, 0.25, depth / 2 + 0.05);
+    
+    // Vertical Handle
+    const handle = new THREE.Mesh(driveHandleGeo, driveHandleMat);
+    handle.position.set(px - 0.06, 0, depth / 2 + 0.1);
     group.add(handle);
+
+    // Status LED
     const led = new THREE.Mesh(ledGeo, ledMat);
-    led.position.set(px - 0.1, -0.25, depth / 2 + 0.05);
+    led.position.set(px + 0.05, -driveH / 2 + 0.06, depth / 2 + 0.1);
     group.add(led);
     leds.push(led);
   }
 
-  const powerBtn = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
-  powerBtn.position.set(-2.2, 0.2, depth / 2 + 0.042);
-  group.add(powerBtn);
+  // Center Section
+  // CD/DVD tray (top center)
+  const cdW = 0.8;
+  const cdH = 0.12;
+  const cdTray = new THREE.Mesh(new THREE.BoxGeometry(cdW, cdH, 0.02), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+  cdTray.position.set(0.2, 0.25, depth / 2 + 0.08);
+  group.add(cdTray);
+  const cdBtn = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.02), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+  cdBtn.position.set(0.2 + cdW/2 + 0.05, 0.25, depth / 2 + 0.08);
+  group.add(cdBtn);
 
-  const statusPanel = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.01), new THREE.MeshBasicMaterial({ color: 0x1d4ed8 }));
-  statusPanel.position.set(1.25, 0.22, depth / 2 + 0.045);
-  group.add(statusPanel);
+  // Port Cluster (bottom center)
+  const portGroupX = 0.2;
+  const portGroupY = -0.15;
+  // VGA port
+  const vga = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.02), new THREE.MeshStandardMaterial({ color: 0x1e3a8a }));
+  vga.position.set(portGroupX - 0.4, portGroupY, depth / 2 + 0.08);
+  group.add(vga);
+  // USB ports
+  for(let i=0; i<2; i++) {
+    const usb = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 0.02), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+    usb.position.set(portGroupX - 0.15, portGroupY + 0.05 - i*0.1, depth / 2 + 0.08);
+    group.add(usb);
+  }
+  // RJ45 Ports (2x4)
+  const rjMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  const rjBorder = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 });
+  for(let row=0; row<2; row++) {
+    for(let col=0; col<4; col++) {
+      const px = portGroupX + 0.1 + col*0.16;
+      const py = portGroupY + 0.08 - row*0.16;
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.01), rjBorder);
+      b.position.set(px, py, depth / 2 + 0.08);
+      group.add(b);
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.02), rjMat);
+      p.position.set(px, py, depth / 2 + 0.085);
+      group.add(p);
+    }
+  }
+
+  // Right Section: Cooling Grill & Buttons
+  // Grill
+  const grillW = 1.3;
+  const grillH = height - 0.2;
+  const grill = new THREE.Mesh(new THREE.BoxGeometry(grillW, grillH, 0.02), new THREE.MeshStandardMaterial({ color: 0x050505 }));
+  grill.position.set(width / 2 - 0.85, 0, depth / 2 + 0.08);
+  group.add(grill);
+  
+  // Grill hex/holes pattern (represented by vertical bars for simplicity)
+  for(let i=0; i<12; i++) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.04, grillH, 0.02), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+    bar.position.set(width / 2 - 1.4 + i*0.1, 0, depth / 2 + 0.085);
+    group.add(bar);
+  }
+
+  // Info panel / Buttons (rightmost)
+  const infoPan = new THREE.Mesh(new THREE.BoxGeometry(0.3, grillH, 0.02), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+  infoPan.position.set(width / 2 - 0.15, 0, depth / 2 + 0.08);
+  group.add(infoPan);
+
+  // Power Button
+  const powerBtn = new THREE.Mesh(new THREE.CircleGeometry(0.05, 16), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 }));
+  powerBtn.position.set(width / 2 - 0.15, 0.2, depth / 2 + 0.091);
+  group.add(powerBtn);
+  // Power LED ring
+  const powerLed = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.01, 8, 16), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
+  powerLed.position.set(width / 2 - 0.15, 0.2, depth / 2 + 0.091);
+  group.add(powerLed);
+  leds.push(powerLed);
+
+  // Status LEDs (Warning/Fault/ID)
+  const ledColors = [0x3b82f6, 0xf59e0b, 0xef4444];
+  for(let i=0; i<3; i++) {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 0.01), new THREE.MeshBasicMaterial({ color: ledColors[i] }));
+    l.position.set(width / 2 - 0.15, 0.0 - i*0.1, depth / 2 + 0.091);
+    group.add(l);
+    leds.push(l);
+  }
 
   return { mesh: group, leds };
 }
@@ -3356,7 +3446,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                 </div>
               )}
 
-              {["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel"].includes(selectedNode.data.kind as string) && (
+              {["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm"].includes(selectedNode.data.kind as string) && (
                 <div className="p-3 rounded-lg bg-secondary/50 border border-border/60 space-y-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400">
                     <Layers className="w-3.5 h-3.5" />

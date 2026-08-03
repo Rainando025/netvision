@@ -3,7 +3,7 @@ export type CameraType = "Dome" | "Bullet" | "PTZ" | "Fisheye" | "Box";
 
 export type DeviceStatus = "online" | "offline" | "warning";
 
-export type NodeDataKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm";
+export type NodeDataKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier";
 
 export interface ThreeDAttributes {
   position3d?: { x: number; y: number; z: number };
@@ -133,6 +133,12 @@ export interface DwdmNodeData extends Record<string, unknown>, ThreeDAttributes 
   ip?: string;
 }
 
+export interface RectifierNodeData extends Record<string, unknown>, ThreeDAttributes {
+  kind: "rectifier";
+  name: string;
+  modules: number; // Number of rectifier modules installed
+}
+
 export type NodeData =
   | SwitchNodeData
   | CameraNodeData
@@ -150,7 +156,8 @@ export type NodeData =
   | InverterNodeData
   | SolarNodeData
   | PatchPanelNodeData
-  | DwdmNodeData;
+  | DwdmNodeData
+  | RectifierNodeData;
 
 export interface ScannedDevice {
   ip: string;

@@ -7,7 +7,7 @@ import { useDiagram } from "@/lib/store";
 const SWITCH_TYPES: SwitchType[] = ["Gerenciável L2", "Gerenciável L3", "PoE", "Não Gerenciável"];
 const CAMERA_TYPES: CameraType[] = ["Dome", "Bullet", "PTZ", "Fisheye", "Box"];
 
-type DialogKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm";
+type DialogKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier";
 
 export function AddDeviceMenu() {
   const [open, setOpen] = useState<null | DialogKind>(null);
@@ -159,6 +159,11 @@ export function AddDeviceMenu() {
               <Sun className="w-3.5 h-3.5 text-orange-500" />
               Painel Solar
             </button>
+            <button onClick={() => setOpen("rectifier")}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md glass hover:bg-secondary/60 transition text-xs font-medium border border-border/30">
+              <Zap className="w-3.5 h-3.5 text-blue-500" />
+              Retificadora
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -192,6 +197,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     solar: "Painel Solar 550W",
     patchpanel: "Patch Panel 24P",
     dwdm: "OptiX OSN 9800",
+    rectifier: "Retificadora DC",
   };
 
   const [name, setName] = useState(defaultNames[kind]);
@@ -219,6 +225,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
   const [inverterPower, setInverterPower] = useState(3000);
   const [solarPower, setSolarPower] = useState(550);
   const [patchpanelPorts, setPatchpanelPorts] = useState(24);
+  const [rectifierModules, setRectifierModules] = useState(3);
 
   // DIO U height based on port count
   const dioUHeight = dioPorts <= 24 ? 1 : dioPorts <= 48 ? 2 : 3;
@@ -285,6 +292,8 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
       addNode({ id, type: "patchpanel", position, data: { kind: "patchpanel", name, ports: patchpanelPorts, rackUHeight: 1 } });
     } else if (kind === "dwdm") {
       addNode({ id, type: "dwdm", position, data: { kind: "dwdm", name, model: "OptiX OSN 9800", rackUHeight: 14 } });
+    } else if (kind === "rectifier") {
+      addNode({ id, type: "rectifier", position, data: { kind: "rectifier", name, modules: rectifierModules, rackUHeight: 4 } });
     }
     onClose();
   };
@@ -307,6 +316,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     solar: <Sun className="w-5 h-5" />,
     patchpanel: <GripHorizontal className="w-5 h-5" />,
     dwdm: <Activity className="w-5 h-5" />,
+    rectifier: <Zap className="w-5 h-5" />,
   };
 
   const colorMap: Record<DialogKind, string> = {
@@ -327,6 +337,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     solar: "bg-orange-400/15 text-orange-500",
     patchpanel: "bg-slate-500/15 text-slate-400",
     dwdm: "bg-indigo-500/15 text-indigo-500",
+    rectifier: "bg-blue-500/15 text-blue-500",
   };
 
   const labelMap: Record<DialogKind, string> = {
@@ -347,9 +358,10 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     solar: "Painel Solar",
     patchpanel: "Patch Panel RJ45",
     dwdm: "Equipamento DWDM",
+    rectifier: "Sistema Retificador DC",
   };
 
-  const isNetwork = ["switch", "camera", "rack", "olt", "dio", "router", "server", "inverter", "solar", "patchpanel", "dwdm"].includes(kind);
+  const isNetwork = ["switch", "camera", "rack", "olt", "dio", "router", "server", "inverter", "solar", "patchpanel", "dwdm", "rectifier"].includes(kind);
   const submitStyle = isNetwork
     ? "bg-primary text-primary-foreground hover:glow-cyan"
     : "bg-secondary text-foreground hover:bg-secondary/80 border border-border";
@@ -617,6 +629,14 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
             <Field label={`Capacidade: ${solarPower}W`}>
               <input type="range" min={100} max={1000} step={50} value={solarPower}
                 onChange={(e) => setSolarPower(parseInt(e.target.value))}
+                className="w-full accent-primary" />
+            </Field>
+          )}
+
+          {kind === "rectifier" && (
+            <Field label={`Módulos Retificadores: ${rectifierModules}`}>
+              <input type="range" min={1} max={6} step={1} value={rectifierModules}
+                onChange={(e) => setRectifierModules(parseInt(e.target.value))}
                 className="w-full accent-primary" />
             </Field>
           )}

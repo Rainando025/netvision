@@ -210,6 +210,8 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
   const [wallWidth, setWallWidth] = useState(10);
   const [lampColor, setLampColor] = useState("#fffbe8");
   const [lampIntensity, setLampIntensity] = useState(2);
+  const [powerWatts, setPowerWatts] = useState(0);
+  const [amperage, setAmperage] = useState(0);
   
   // ISP State
   const [ponPorts, setPonPorts] = useState(8);
@@ -251,11 +253,11 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     const position = { x: 200 + (nodes.length % 5) * 280, y: 100 + Math.floor(nodes.length / 5) * 220 };
 
     if (kind === "switch") {
-      addNode({ id, type: "switch", position, data: { kind: "switch", name, switchType, ports, rackUHeight: 1 } });
+      addNode({ id, type: "switch", position, data: { kind: "switch", name, switchType, ports, rackUHeight: 1, powerWatts, amperage } });
     } else if (kind === "rack") {
       addNode({ id, type: "rack", position, data: { kind: "rack", name, units, rackType } });
     } else if (kind === "camera") {
-      addNode({ id, type: "camera", position, data: { kind: "camera", name, cameraType, ip, status: "online", ping: 0 } });
+      addNode({ id, type: "camera", position, data: { kind: "camera", name, cameraType, ip, status: "online", ping: 0, powerWatts, amperage } });
     } else if (kind === "wall") {
       addNode({ id, type: "wall", position, data: { kind: "wall", name, width: wallWidth } });
     } else if (kind === "door") {
@@ -265,13 +267,13 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     } else if (kind === "ceiling") {
       addNode({ id, type: "ceiling", position, data: { kind: "ceiling", name } });
     } else if (kind === "olt") {
-      addNode({ id, type: "olt", position, data: { kind: "olt", name, ponPorts, uplinkPorts, ip, rackUHeight: 2 } });
+      addNode({ id, type: "olt", position, data: { kind: "olt", name, ponPorts, uplinkPorts, ip, rackUHeight: 2, powerWatts, amperage } });
     } else if (kind === "dio") {
-      addNode({ id, type: "dio", position, data: { kind: "dio", name, ports: dioPorts, connectorType, rackUHeight: dioUHeight } });
+      addNode({ id, type: "dio", position, data: { kind: "dio", name, ports: dioPorts, connectorType, rackUHeight: dioUHeight, powerWatts, amperage } });
     } else if (kind === "router") {
-      addNode({ id, type: "router", position, data: { kind: "router", name, interfaces: routerIfaces, ip, rackUHeight: 2 } });
+      addNode({ id, type: "router", position, data: { kind: "router", name, interfaces: routerIfaces, ip, rackUHeight: 2, powerWatts, amperage } });
     } else if (kind === "server") {
-      addNode({ id, type: "server", position, data: { kind: "server", name, diskCount, ip, rackUHeight: 2 } });
+      addNode({ id, type: "server", position, data: { kind: "server", name, diskCount, ip, rackUHeight: 2, powerWatts, amperage } });
     } else if (kind === "battery_rack") {
       addNode({ id, type: "battery_rack", position, data: { kind: "battery_rack", name, shelves: batterySlots, batteryCount: batterySlots, capacityAh: selectedBatModel.capacityAh, isLithium: (selectedBatModel as any).isLithium } as any });
     } else if (kind === "stationary_battery") {
@@ -285,15 +287,15 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
         modelId: batteryModel,
       } as any });
     } else if (kind === "inverter") {
-      addNode({ id, type: "inverter", position, data: { kind: "inverter", name, powerWatts: inverterPower, rackUHeight: 2 } });
+      addNode({ id, type: "inverter", position, data: { kind: "inverter", name, powerWatts: inverterPower, amperage, rackUHeight: 2 } });
     } else if (kind === "solar") {
       addNode({ id, type: "solar", position, data: { kind: "solar", name, powerWatts: solarPower } });
     } else if (kind === "patchpanel") {
-      addNode({ id, type: "patchpanel", position, data: { kind: "patchpanel", name, ports: patchpanelPorts, rackUHeight: 1 } });
+      addNode({ id, type: "patchpanel", position, data: { kind: "patchpanel", name, ports: patchpanelPorts, rackUHeight: 1, powerWatts, amperage } });
     } else if (kind === "dwdm") {
-      addNode({ id, type: "dwdm", position, data: { kind: "dwdm", name, model: "OptiX OSN 9800", rackUHeight: 14 } });
+      addNode({ id, type: "dwdm", position, data: { kind: "dwdm", name, model: "OptiX OSN 9800", rackUHeight: 14, powerWatts, amperage } });
     } else if (kind === "rectifier") {
-      addNode({ id, type: "rectifier", position, data: { kind: "rectifier", name, modules: rectifierModules, rackUHeight: 4 } });
+      addNode({ id, type: "rectifier", position, data: { kind: "rectifier", name, modules: rectifierModules, rackUHeight: 4, powerWatts, amperage } });
     }
     onClose();
   };
@@ -408,6 +410,20 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
               required
             />
           </Field>
+
+          {!["wall", "door", "ceiling", "lamp", "rack", "battery_rack", "stationary_battery", "inverter", "solar"].includes(kind) && (
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Amperagem (A)">
+                <input type="number" step="0.1" value={amperage} onChange={(e) => setAmperage(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-input/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+              </Field>
+              <Field label="Potência (W)">
+                <input type="number" step="1" value={powerWatts} onChange={(e) => setPowerWatts(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-input/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+              </Field>
+            </div>
+          )}
+
 
           {kind === "switch" && (
             <>
@@ -612,25 +628,37 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
           )}
 
           {kind === "inverter" && (
-            <Field label={`Potência: ${inverterPower}W (${(inverterPower / 1000).toFixed(1)} kVA)`}>
-              <select value={inverterPower} onChange={(e) => setInverterPower(parseInt(e.target.value))}
-                className="w-full bg-input/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
-                <option value={600}>600W (mini UPS)</option>
-                <option value={1000}>1000W / 1 kVA</option>
-                <option value={2000}>2000W / 2 kVA</option>
-                <option value={3000}>3000W / 3 kVA (padrão)</option>
-                <option value={5000}>5000W / 5 kVA</option>
-                <option value={10000}>10000W / 10 kVA (grande)</option>
-              </select>
-            </Field>
+            <>
+              <Field label={`Potência: ${inverterPower}W (${(inverterPower / 1000).toFixed(1)} kVA)`}>
+                <select value={inverterPower} onChange={(e) => setInverterPower(parseInt(e.target.value))}
+                  className="w-full bg-input/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                  <option value={600}>600W (mini UPS)</option>
+                  <option value={1000}>1000W / 1 kVA</option>
+                  <option value={2000}>2000W / 2 kVA</option>
+                  <option value={3000}>3000W / 3 kVA (padrão)</option>
+                  <option value={5000}>5000W / 5 kVA</option>
+                  <option value={10000}>10000W / 10 kVA (grande)</option>
+                </select>
+              </Field>
+              <Field label="Amperagem (A)">
+                <input type="number" step="0.1" value={amperage} onChange={(e) => setAmperage(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-input/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+              </Field>
+            </>
           )}
 
           {kind === "solar" && (
-            <Field label={`Capacidade: ${solarPower}W`}>
-              <input type="range" min={100} max={1000} step={50} value={solarPower}
-                onChange={(e) => setSolarPower(parseInt(e.target.value))}
-                className="w-full accent-primary" />
-            </Field>
+            <>
+              <Field label={`Capacidade: ${solarPower}W`}>
+                <input type="range" min={100} max={1000} step={50} value={solarPower}
+                  onChange={(e) => setSolarPower(parseInt(e.target.value))}
+                  className="w-full accent-primary" />
+              </Field>
+              <Field label="Amperagem (A)">
+                <input type="number" step="0.1" value={amperage} onChange={(e) => setAmperage(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-input/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+              </Field>
+            </>
           )}
 
           {kind === "rectifier" && (

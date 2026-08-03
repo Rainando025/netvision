@@ -2248,13 +2248,13 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     window.addEventListener("keyup", onKeyUp);
 
     // Soft Isometric Lighting (Hemisphere + Directional)
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe2e8f0, 0.7);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x94a3b8, 0.4);
     scene.add(hemiLight);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
     mainLight.position.set(24, 34, 18);
     mainLight.castShadow = true;
     mainLight.shadow.mapSize.width = 4096;
@@ -2808,11 +2808,11 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           const targetW = innerWidth - 0.1;       // slight gap from rails
           const targetD = innerDepth - 0.35;      // leave room for cable management
 
-          // Scale device to fit the rack slot â€” uniform enough to keep proportions
-          // but squish height to fit exactly N units
+          // Scale device to fit the rack slot exactly:
+          // scaleY = exact U height, scaleX = full rack width, scaleZ = fit depth
           const scaleY = devSize.y > 0 ? targetH / devSize.y : 1;
-          const scaleX = devSize.x > 0 ? Math.min(targetW / devSize.x, scaleY * 1.5) : 1;
-          const scaleZ = devSize.z > 0 ? Math.min(targetD / devSize.z, 1.0) : 1;
+          const scaleX = devSize.x > 0 ? targetW / devSize.x : 1;
+          const scaleZ = devSize.z > 0 ? Math.min(targetD / devSize.z, 1.2) : 1;
           deviceGroup.scale.set(scaleX, scaleY, scaleZ);
 
           // Recompute bounding box after scaling

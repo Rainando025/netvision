@@ -14,6 +14,7 @@ export interface ThreeDAttributes {
   customModelUrl?: string; // Loaded glTF/OBJ object URL
   customModelName?: string; // Display name of custom model
   powerWatts?: number; // optional device power (W)
+  amperage?: number; // optional device amperage (A)
 }
 
 export interface SwitchNodeData extends Record<string, unknown>, ThreeDAttributes {

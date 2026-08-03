@@ -29,6 +29,7 @@ import { ServerNode } from "@/components/nodes/ServerNode";
 import { BatteryRackNode } from "@/components/nodes/BatteryRackNode";
 import { StationaryBatteryNode } from "@/components/nodes/StationaryBatteryNode";
 import { InverterNode } from "@/components/nodes/InverterNode";
+import { RectifierNode } from "@/components/nodes/RectifierNode";
 import { SolarNode } from "@/components/nodes/SolarNode";
 import { PatchPanelNode } from "@/components/nodes/PatchPanelNode";
 import { DwdmNode } from "@/components/nodes/DwdmNode";
@@ -94,6 +95,7 @@ function DiagramPage() {
     battery_rack: BatteryRackNode,
     stationary_battery: StationaryBatteryNode,
     inverter: InverterNode,
+    rectifier: RectifierNode,
     solar: SolarNode,
     patchpanel: PatchPanelNode,
     dwdm: DwdmNode,

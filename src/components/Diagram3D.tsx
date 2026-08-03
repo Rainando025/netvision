@@ -1592,6 +1592,96 @@ function createProceduralInverter(powerWatts: number) {
   return { mesh: group, leds: [loggerLed] };
 }
 
+function createProceduralRectifier(modulesCount: number) {
+  const group = new THREE.Group();
+  const width = 4.8;
+  const depth = 2.5;
+  const height = 1.8; // 4U
+
+  // Chassis
+  const chassisMat = new THREE.MeshStandardMaterial({ color: 0xc0c8d5, metalness: 0.8, roughness: 0.4 });
+  const chassis = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), chassisMat);
+  chassis.castShadow = true;
+  chassis.receiveShadow = true;
+  group.add(chassis);
+
+  // Front bezel/panel
+  const frontGroup = new THREE.Group();
+  frontGroup.position.set(0, 0, depth / 2 + 0.05);
+  group.add(frontGroup);
+
+  // Top Section (Controller & Rectifier Modules)
+  const topH = 0.6;
+  const topY = height / 2 - topH / 2 - 0.1;
+  const ctrlW = 1.2;
+  const ctrlMat = new THREE.MeshStandardMaterial({ color: 0x3b4252, metalness: 0.3, roughness: 0.7 });
+  const ctrlBox = new THREE.Mesh(new THREE.BoxGeometry(ctrlW, topH, 0.1), ctrlMat);
+  ctrlBox.position.set(-width / 2 + ctrlW / 2 + 0.2, topY, 0);
+  frontGroup.add(ctrlBox);
+
+  // LCD on controller
+  const lcd = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.12), new THREE.MeshBasicMaterial({ color: 0x88c0d0 }));
+  lcd.position.set(-width / 2 + ctrlW / 2 + 0.2, topY + 0.1, 0);
+  frontGroup.add(lcd);
+  
+  // Controller LED
+  const led = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.15, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+  led.rotation.x = Math.PI / 2;
+  led.position.set(-width / 2 + ctrlW / 2 + 0.2, topY - 0.15, 0.05);
+  frontGroup.add(led);
+
+  // Rectifier modules (Right side)
+  const modMat = new THREE.MeshStandardMaterial({ color: 0x2e3440, metalness: 0.5, roughness: 0.5 });
+  const fanMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+  const modW = 0.8;
+  const startX = -width / 2 + ctrlW + 0.6;
+  for(let i=0; i<Math.min(modulesCount, 4); i++) {
+    const mod = new THREE.Mesh(new THREE.BoxGeometry(modW - 0.05, topH, 0.1), modMat);
+    mod.position.set(startX + i * modW, topY, 0);
+    frontGroup.add(mod);
+
+    // Fans
+    const fan1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.12, 16), fanMat);
+    fan1.rotation.x = Math.PI / 2;
+    fan1.position.set(startX + i * modW, topY, 0);
+    frontGroup.add(fan1);
+  }
+
+  // Middle Section (Breakers)
+  const midH = 0.6;
+  const midY = topY - topH / 2 - midH / 2 - 0.05;
+  const midPanel = new THREE.Mesh(new THREE.BoxGeometry(width - 0.4, midH, 0.05), new THREE.MeshStandardMaterial({ color: 0x4c566a, roughness: 0.8 }));
+  midPanel.position.set(0, midY, 0);
+  frontGroup.add(midPanel);
+
+  // DIN Rail & Breakers
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(width - 0.6, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: 0xe5e9f0, metalness: 0.8 }));
+  rail.position.set(0, midY, 0.02);
+  frontGroup.add(rail);
+
+  const breakerMat = new THREE.MeshStandardMaterial({ color: 0x81a1c1, roughness: 0.2 });
+  const breakerBodyMat = new THREE.MeshStandardMaterial({ color: 0xd8dee9, roughness: 0.5 });
+  for(let i=0; i<5; i++) {
+    const bBody = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.4, 0.15), breakerBodyMat);
+    bBody.position.set(-width / 4 + i * 0.4, midY, 0.05);
+    frontGroup.add(bBody);
+    
+    const bToggle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.2), breakerMat);
+    bToggle.position.set(-width / 4 + i * 0.4, midY + 0.05, 0.1);
+    frontGroup.add(bToggle);
+  }
+
+  // Bottom Section (Terminals/Cover)
+  const botH = 0.3;
+  const botY = midY - midH / 2 - botH / 2 - 0.05;
+  const botPanel = new THREE.Mesh(new THREE.BoxGeometry(width - 0.4, botH, 0.1), new THREE.MeshStandardMaterial({ color: 0x2e3440, roughness: 0.7 }));
+  botPanel.position.set(0, botY, 0);
+  frontGroup.add(botPanel);
+
+  group.position.y = height / 2;
+  return { mesh: group, leds: [led] };
+}
+
 function createProceduralSolar(powerWatts: number) {
   const group = new THREE.Group();
 
@@ -2601,8 +2691,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     });
 
     // Pass 2: Devices
-    nodes.filter((n) => ["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "solar", "patchpanel", "dwdm"].includes(n.data.kind as string)).forEach((node) => {
-      const isSwitch = ["switch", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm"].includes(node.data.kind as string);
+    nodes.filter((n) => ["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "solar", "patchpanel", "dwdm", "rectifier"].includes(n.data.kind as string)).forEach((node) => {
+      const isSwitch = ["switch", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm", "rectifier"].includes(node.data.kind as string);
       let deviceGroup: THREE.Group | null = null;
       let ledList: THREE.Mesh[] = [];
 
@@ -2636,6 +2726,15 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           const { mesh, leds } = createProceduralDIO(dioData.ports ?? 24, dioData.connectorType ?? "SC/APC");
           deviceGroup.add(mesh);
           ledList = leds;
+        } else if (node.data.kind === "dwdm") {
+          const { mesh, leds } = createProceduralDwdm();
+          deviceGroup.add(mesh);
+          ledList = leds;
+        } else if (node.data.kind === "rectifier") {
+          const rectData = node.data as any;
+          const { mesh, leds } = createProceduralRectifier(rectData.modules ?? 3);
+          deviceGroup.add(mesh);
+          ledList = leds;
         } else if (node.data.kind === "router") {
           const routerData = node.data as any;
           const { mesh, leds } = createProceduralRouter(routerData.interfaces ?? 12);
@@ -2666,10 +2765,6 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           const { mesh, leds } = createProceduralPatchPanel(ppData.ports ?? 24);
           deviceGroup.add(mesh);
           ledList = leds;
-        } else if (node.data.kind === "dwdm") {
-          const { mesh, leds } = createProceduralDwdm();
-          deviceGroup.add(mesh);
-          ledList = leds;
         } else {
           const camData = node.data as CameraNodeData;
           const { mesh } = createProceduralCamera(camData.cameraType);
@@ -2695,7 +2790,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           const kindUHeightMap: Record<string, number> = {
             switch: 2, olt: 4, dio: 2, router: 4, server: 2,
             stationary_battery: 6, inverter: 3, patchpanel: 1,
-            dwdm: 14,
+            dwdm: 14, rectifier: 4,
           };
           const autoUHeight = kindUHeightMap[node.data.kind as string] ?? 2;
           const uSlot = node.data.rackUnit ?? 1;
@@ -2844,8 +2939,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       const tubeGeo = new THREE.TubeGeometry(curve, 64, 0.04, 8, false);
 
       const isOffline = sourceNode?.data.status === "offline" || targetNode?.data.status === "offline";
-      const isPower = edge.data?.isPower || ["stationary_battery", "battery_rack", "inverter", "solar"].includes(sourceNode?.data.kind as string)
-        || ["stationary_battery", "battery_rack", "inverter", "solar"].includes(targetNode?.data.kind as string);
+      const isPower = edge.data?.isPower || ["stationary_battery", "battery_rack", "inverter", "solar", "rectifier"].includes(sourceNode?.data.kind as string)
+        || ["stationary_battery", "battery_rack", "inverter", "solar", "rectifier"].includes(targetNode?.data.kind as string);
 
       const customColor = edge.data?.color as string | undefined;
       let tubeColor = isOffline ? 0xb91c1c : (isPower ? 0xeab308 : 0xf97316);
@@ -3472,7 +3567,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                 </div>
               )}
 
-              {["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm"].includes(selectedNode.data.kind as string) && (
+              {["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm", "rectifier"].includes(selectedNode.data.kind as string) && (
                 <div className="p-3 rounded-lg bg-secondary/50 border border-border/60 space-y-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400">
                     <Layers className="w-3.5 h-3.5" />

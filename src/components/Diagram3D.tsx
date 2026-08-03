@@ -2113,8 +2113,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = true;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMapping = THREE.NoToneMapping;
+    renderer.toneMappingExposure = 1.0;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -2205,13 +2205,13 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       const grid2 = isLight ? 0x64748b : 0x0d1f3c;
 
       if (isLight) {
-        hemiLight.intensity = 0.7;
-        ambientLight.intensity = 0.7;
-        mainLight.intensity = 1.25;
+        hemiLight.intensity = 0.35;
+        ambientLight.intensity = 0.35;
+        mainLight.intensity = 1.5;
       } else {
-        hemiLight.intensity = 1.4;
-        ambientLight.intensity = 1.4;
-        mainLight.intensity = 2.0;
+        hemiLight.intensity = 0.15;
+        ambientLight.intensity = 0.15;
+        mainLight.intensity = 1.2;
       }
 
       scene.background = new THREE.Color(bgColor);
@@ -3349,6 +3349,21 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                   className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all" />
               </div>
 
+              {!["wall", "door", "ceiling"].includes(selectedNode.data.kind as string) && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">Amperagem (A)</label>
+                    <input type="number" step="0.1" value={(selectedNode.data as any).amperage || 0} onChange={(e) => updateNodeData(selectedNodeId!, { amperage: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">Potência (W)</label>
+                    <input type="number" step="1" value={(selectedNode.data as any).powerWatts || 0} onChange={(e) => updateNodeData(selectedNodeId!, { powerWatts: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all" />
+                  </div>
+                </div>
+              )}
+
               {selectedNode.data.kind === "camera" && (
                 <div>
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">EndereÃ§o IP</label>
@@ -3369,6 +3384,17 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                       <option value="closed">Rack Fechado (Gabinete)</option>
                       <option value="open">Rack Aberto (Open Rack)</option>
                     </select>
+                    <div className="mt-3">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 block">Unidades (U)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={80}
+                        className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
+                        value={(selectedNode.data as any).units || 24}
+                        onChange={(e) => updateNodeData(selectedNodeId!, { units: parseInt(e.target.value) || 24 })}
+                      />
+                    </div>
                   </div>
 
                   {(selectedNode.data as any).rackType !== "open" && (

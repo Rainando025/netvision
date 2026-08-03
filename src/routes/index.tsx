@@ -34,6 +34,9 @@ function Dashboard() {
 
   const health = totalDevices.length === 0 ? 100 : 100; // Placeholder
 
+  const totalPower = useMemo(() => nodes.reduce((acc, n) => acc + ((n.data as any).powerWatts || 0), 0), [nodes]);
+  const totalAmperage = useMemo(() => nodes.reduce((acc, n) => acc + ((n.data as any).amperage || 0), 0), [nodes]);
+
   const deviceStats = useMemo(() => [
     { kind: "switch", label: "Switches", count: switches.length, color: "text-cyan-500", bg: "bg-cyan-500/10 border-cyan-500/30" },
     { kind: "olt", label: "OLTs GPON", count: olts.length, color: "text-green-500", bg: "bg-green-500/10 border-green-500/30" },
@@ -73,11 +76,12 @@ function Dashboard() {
         </div>
 
         {/* KPI cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Kpi icon={<Network className="w-4 h-4" />} label="Switches" value={switches.length} accent="primary" />
           <Kpi icon={<Radio className="w-4 h-4" />} label="OLTs GPON" value={olts.length} accent="success" />
           <Kpi icon={<Server className="w-4 h-4" />} label="Servidores" value={servers.length} accent="accent" />
           <Kpi icon={<ShieldCheck className="w-4 h-4" />} label="Saúde da Rede" value={`${health}%`} accent="success" />
+          <Kpi icon={<Zap className="w-4 h-4" />} label="Consumo POP" value={`${totalPower}W / ${totalAmperage.toFixed(1)}A`} accent="accent" />
         </div>
 
         {/* Infrastructure overview */}

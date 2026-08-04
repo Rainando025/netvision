@@ -7,7 +7,7 @@ import { useDiagram } from "@/lib/store";
 const SWITCH_TYPES: SwitchType[] = ["Gerenciável L2", "Gerenciável L3", "PoE", "Não Gerenciável"];
 const CAMERA_TYPES: CameraType[] = ["Dome", "Bullet", "PTZ", "Fisheye", "Box"];
 
-type DialogKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier";
+type DialogKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "floor" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier";
 
 export function AddDeviceMenu() {
   const [open, setOpen] = useState<null | DialogKind>(null);
@@ -126,6 +126,11 @@ export function AddDeviceMenu() {
               <Box className="w-3.5 h-3.5 text-slate-400" />
               Teto
             </button>
+            <button onClick={() => setOpen("floor")}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md glass hover:bg-secondary/60 transition text-xs font-medium border border-border/30">
+              <Box className="w-3.5 h-3.5 text-slate-500" />
+              Chão
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -187,6 +192,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     door: "Porta Entrada",
     lamp: "Lâmpada 1",
     ceiling: "Teto Principal",
+    floor: "Piso / Chão",
     olt: "OLT Huawei MA5800",
     dio: "DIO 24F",
     router: "Router Borda",
@@ -266,6 +272,8 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
       addNode({ id, type: "lamp", position, data: { kind: "lamp", name, color: lampColor, intensity: lampIntensity } });
     } else if (kind === "ceiling") {
       addNode({ id, type: "ceiling", position, data: { kind: "ceiling", name } });
+    } else if (kind === "floor") {
+      addNode({ id, type: "floor", position, data: { kind: "floor", name, width: wallWidth } }); // Reuse wallWidth state for floor size if needed
     } else if (kind === "olt") {
       addNode({ id, type: "olt", position, data: { kind: "olt", name, ponPorts, uplinkPorts, ip, rackUHeight: 2, powerWatts, amperage } });
     } else if (kind === "dio") {
@@ -308,6 +316,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     door: <DoorClosed className="w-5 h-5" />,
     lamp: <Lightbulb className="w-5 h-5" />,
     ceiling: <Box className="w-5 h-5" />,
+    floor: <Box className="w-5 h-5" />,
     olt: <Activity className="w-5 h-5" />,
     dio: <Network className="w-5 h-5" />,
     router: <Router className="w-5 h-5" />,
@@ -329,6 +338,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     door: "bg-amber-500/15 text-amber-500",
     lamp: "bg-yellow-400/15 text-yellow-500",
     ceiling: "bg-slate-400/15 text-slate-400",
+    floor: "bg-stone-500/15 text-stone-500",
     olt: "bg-green-500/15 text-green-500",
     dio: "bg-indigo-500/15 text-indigo-500",
     router: "bg-orange-500/15 text-orange-500",
@@ -350,6 +360,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     door: "Porta",
     lamp: "Lâmpada",
     ceiling: "Teto / Forro",
+    floor: "Plano do Chão",
     olt: "Terminal Óptico (OLT)",
     dio: "Distribuidor Óptico (DIO)",
     router: "Roteador Core",
@@ -411,7 +422,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
             />
           </Field>
 
-          {!["wall", "door", "ceiling", "lamp", "rack", "battery_rack", "stationary_battery", "inverter", "solar"].includes(kind) && (
+          {!["wall", "door", "ceiling", "floor", "lamp", "rack", "battery_rack", "stationary_battery", "inverter", "solar"].includes(kind) && (
             <div className="grid grid-cols-2 gap-3">
               <Field label="Amperagem (A)">
                 <input type="number" step="0.1" value={amperage} onChange={(e) => setAmperage(parseFloat(e.target.value) || 0)}
@@ -481,14 +492,14 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
             </>
           )}
 
-          {kind === "wall" && (
+          {(kind === "wall" || kind === "floor") && (
             <>
-              <Field label={`Comprimento: ${wallWidth}m`}>
-                <input type="range" min={2} max={30} step={1} value={wallWidth}
+              <Field label={`Tamanho: ${wallWidth}m`}>
+                <input type="range" min={2} max={50} step={1} value={wallWidth}
                   onChange={(e) => setWallWidth(parseInt(e.target.value))}
                   className="w-full accent-primary" />
               </Field>
-              <p className="text-xs text-muted-foreground">A parede aparecerá no diagrama 3D como um bloco de alvenaria. Você pode adicionar múltiplas paredes e girá-las.</p>
+              <p className="text-xs text-muted-foreground">{kind === "wall" ? "A parede aparecerá no diagrama 3D como um bloco de alvenaria. Você pode adicionar múltiplas paredes e girá-las." : "O chão aparecerá no diagrama 3D como um piso sólido sob os equipamentos."}</p>
             </>
           )}
 

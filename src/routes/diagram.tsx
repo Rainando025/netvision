@@ -39,7 +39,7 @@ import { useDiagram } from "@/lib/store";
 import type { NodeData } from "@/lib/types";
 import {
   Box, FolderOpen, Folder, Layers, MapPin, Plus, Maximize2, ChevronLeft,
-  Trash2, FolderPlus, ChevronRight, ChevronDown, List, LayoutGrid, Network, Search
+  Trash2, FolderPlus, ChevronRight, ChevronDown, List, LayoutGrid, Network, Search, Zap
 } from "lucide-react";
 import { DeletableEdge } from "@/components/DeletableEdge";
 
@@ -58,6 +58,9 @@ function DiagramPage() {
   const edges = useDiagram((s) => s.edges);
   const locations = useDiagram((s) => s.locations);
   const activeLocationId = useDiagram((s) => s.activeLocationId);
+
+  const totalPower = useMemo(() => nodes.reduce((acc, n) => acc + ((n.data as any).powerWatts || 0), 0), [nodes]);
+  const totalAmperage = useMemo(() => nodes.reduce((acc, n) => acc + ((n.data as any).amperage || 0), 0), [nodes]);
   const setNodes = useDiagram((s) => s.setNodes);
   const setEdges = useDiagram((s) => s.setEdges);
   const removeNode = useDiagram((s) => s.removeNode);
@@ -461,6 +464,15 @@ function DiagramPage() {
                     <Stat label="Switches" value={nodes.filter((n) => (n.data as NodeData).kind === "switch").length} />
                     <Stat label="Câmeras" value={nodes.filter((n) => (n.data as NodeData).kind === "camera").length} />
                     <Stat label="Links" value={edges.length} />
+                    {totalPower > 0 && (
+                      <div className="flex items-center gap-1.5 pl-4 border-l border-border/40">
+                        <Zap className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                        <div>
+                          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Consumo</div>
+                          <div className="font-display text-base font-semibold text-yellow-500">{totalPower}W{totalAmperage > 0 ? ` / ${totalAmperage.toFixed(1)}A` : ""}</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex bg-secondary/60 p-1 rounded-md border border-border/40">

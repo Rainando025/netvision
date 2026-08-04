@@ -2211,7 +2211,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     sceneRef.current = scene;
 
     const aspect = width / height;
-    const frustumSize = 40;
+    const frustumSize = 20;
     const camera = new THREE.OrthographicCamera(
       (frustumSize * aspect) / -2,
       (frustumSize * aspect) / 2,
@@ -2220,8 +2220,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       -100,
       1000
     );
-    // True isometric angle
-    camera.position.set(30, 30, 30);
+    // True isometric angle — closer initial position
+    camera.position.set(15, 15, 15);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true, alpha: true });
@@ -2339,7 +2339,12 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       }
 
       if (gridHelper) scene.remove(gridHelper);
-      gridHelper = new THREE.GridHelper(250, 120, grid1, grid2);
+      // Nearly invisible grid — large squares, very low opacity
+      const gridColor1 = isLight ? 0xb0c0d0 : 0x0d1a2e;
+      const gridColor2 = isLight ? 0xc0cfdf : 0x0a1520;
+      gridHelper = new THREE.GridHelper(500, 40, gridColor1, gridColor2);
+      (gridHelper.material as THREE.LineBasicMaterial).opacity = 0.08;
+      (gridHelper.material as THREE.LineBasicMaterial).transparent = true;
       gridHelper.position.y = -0.01;
       scene.add(gridHelper);
     };
@@ -2605,7 +2610,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       const w = canvasRef.current.clientWidth;
       const h = canvasRef.current.clientHeight;
       const newAspect = w / h;
-      const frustumSize = 40;
+      const frustumSize = 20;
       (camera as THREE.OrthographicCamera).left = (frustumSize * newAspect) / -2;
       (camera as THREE.OrthographicCamera).right = (frustumSize * newAspect) / 2;
       (camera as THREE.OrthographicCamera).top = frustumSize / 2;
@@ -2873,7 +2878,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         }
       }
 
-      const dPos = node.data.position3d || { x: (nodes.indexOf(node) * 3) - 4, y: 0.5, z: 4 };
+      const dPos = node.data.position3d || { x: (nodes.indexOf(node) * 3) - 4, y: 0, z: 4 };
       deviceGroup.position.set((dPos as any).x, (dPos as any).y, (dPos as any).z);
       deviceGroup.rotation.set(0, (node.data.rotation3d as any)?.y || 0, 0);
       computedPositions.set(node.id, new THREE.Vector3((dPos as any).x, (dPos as any).y, (dPos as any).z));
@@ -3108,7 +3113,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     const ctrl = controlsRef.current;
     if (cam && ctrl) {
       ctrl.target.set(0, 2, 0);
-      cam.position.set(30, 30, 30);
+      cam.position.set(15, 15, 15);
       cam.zoom = 1;
       cam.updateProjectionMatrix();
       ctrl.update();
@@ -3121,7 +3126,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     const ctrl = controlsRef.current;
     if (cam && ctrl) {
       ctrl.target.set(0, 0, 0);
-      cam.position.set(0.01, 50, 0);
+      cam.position.set(0.01, 25, 0);
       cam.zoom = 1;
       cam.updateProjectionMatrix();
       ctrl.update();
@@ -3160,7 +3165,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         const worldPos = new THREE.Vector3();
         selectedMesh.getWorldPosition(worldPos);
         ctrl.target.copy(worldPos);
-        cam.position.set(worldPos.x + 15, worldPos.y + 15, worldPos.z + 15);
+        cam.position.set(worldPos.x + 8, worldPos.y + 8, worldPos.z + 8);
         cam.zoom = 1.2;
         cam.updateProjectionMatrix();
         ctrl.update();
@@ -3188,7 +3193,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     }
 
     ctrl.target.set(avgX, avgY, avgZ);
-    cam.position.set(avgX + 25, avgY + 20, avgZ + 25);
+    cam.position.set(avgX + 12, avgY + 10, avgZ + 12);
     cam.zoom = 1.0;
     cam.updateProjectionMatrix();
     ctrl.update();

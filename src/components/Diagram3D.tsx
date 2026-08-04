@@ -90,34 +90,34 @@ function createSmallTextSprite(text: string) {
   const context = canvas.getContext("2d");
   if (!context) return new THREE.Sprite();
 
-  const fontSize = 28;
+  const fontSize = 38;
   context.font = `bold ${fontSize}px sans-serif`;
   const metrics = context.measureText(text);
   const textWidth = Math.ceil(metrics.width);
 
   const scaleFactor = 2;
-  canvas.width = (textWidth + 32) * scaleFactor;
-  canvas.height = (fontSize + 16) * scaleFactor;
+  canvas.width = (textWidth + 40) * scaleFactor;
+  canvas.height = (fontSize + 20) * scaleFactor;
 
   context.scale(scaleFactor, scaleFactor);
 
   // Background
-  context.fillStyle = "rgba(10, 25, 47, 0.90)";
+  context.fillStyle = "rgba(10, 25, 47, 0.92)";
   context.beginPath();
-  context.roundRect(2, 2, textWidth + 28, fontSize + 12, 7);
+  context.roundRect(2, 2, textWidth + 36, fontSize + 16, 9);
   context.fill();
 
   // Border
-  context.lineWidth = 2;
+  context.lineWidth = 2.5;
   context.strokeStyle = "#38bdf8";
   context.stroke();
 
   // Text
-  context.fillStyle = "#e0f2fe";
+  context.fillStyle = "#f0f9ff";
   context.font = `bold ${fontSize}px sans-serif`;
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(text, (textWidth + 32) / 2, (fontSize + 16) / 2 + 1);
+  context.fillText(text, (textWidth + 40) / 2, (fontSize + 20) / 2 + 1);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -130,8 +130,8 @@ function createSmallTextSprite(text: string) {
   });
   const sprite = new THREE.Sprite(spriteMaterial);
   sprite.renderOrder = 999;
-  // World-scale: smaller than the big label but still readable
-  sprite.scale.set((textWidth + 32) * 0.006, (fontSize + 16) * 0.006, 1);
+  // World-scale: legível dentro do rack
+  sprite.scale.set((textWidth + 40) * 0.009, (fontSize + 20) * 0.009, 1);
   return sprite;
 }
 

@@ -3346,7 +3346,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         // Do not clamp the exact start and end points so it touches the equipment
         if (idx === 0) return pathPoints[0].clone();
         if (idx === sampledPoints.length - 1) return pathPoints[pathPoints.length - 1].clone();
-        
+
         if (pt.y < minFloorY) pt.y = minFloorY;
         return pt;
       });

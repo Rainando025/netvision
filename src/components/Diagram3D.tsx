@@ -3338,10 +3338,15 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       if (pathPoints.length < 2) return;
 
       // Create initial curve and strictly clamp all interpolated points above floor boundary Y = 0.05
+      // EXCEPTION: Ensure the first and last points touch exactly the equipment's connection point (p1/p2).
       const rawCurve = new THREE.CatmullRomCurve3(pathPoints, false, "chordal", 0.5);
       const sampledPoints = rawCurve.getPoints(64);
       const minFloorY = 0.05;
-      const clampedPoints = sampledPoints.map((pt) => {
+      const clampedPoints = sampledPoints.map((pt, idx) => {
+        // Do not clamp the exact start and end points so it touches the equipment
+        if (idx === 0) return pathPoints[0].clone();
+        if (idx === sampledPoints.length - 1) return pathPoints[pathPoints.length - 1].clone();
+        
         if (pt.y < minFloorY) pt.y = minFloorY;
         return pt;
       });
@@ -4066,7 +4071,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                   <Upload className="w-3.5 h-3.5" />
                   <span>Importar Modelo 3D</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Selecione um arquivo .gltf, .glb ou .obj local para substituir a malha padrÃ£o.</p>
+                <p className="text-[10px] text-muted-foreground">Selecione um arquivo .gltf, .glb ou .obj local para substituir a malha padrão.</p>
                 <label className="flex items-center justify-center gap-2 border border-dashed border-border hover:border-primary rounded-lg p-2 cursor-pointer transition bg-background hover:bg-secondary/80 text-xs font-medium text-foreground">
                   <Upload className="w-4 h-4 text-primary" />
                   <span>{selectedNode.data.customModelName || "Importar Modelo"}</span>
@@ -4081,6 +4086,45 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                   </button>
                 )}
               </div>
+
+              {/* Cabos Conectados */}
+              {(() => {
+                const nodeEdges = edges.filter(e => e.source === selectedNodeId || e.target === selectedNodeId);
+                if (nodeEdges.length === 0) return null;
+                return (
+                  <div className="p-3 rounded-lg bg-secondary/50 border border-border/60 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400 mb-1">
+                      <Network className="w-3.5 h-3.5" />
+                      <span>Cabos Conectados ({nodeEdges.length})</span>
+                    </div>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                      {nodeEdges.map(edge => {
+                        const isSource = edge.source === selectedNodeId;
+                        const otherId = isSource ? edge.target : edge.source;
+                        const otherNode = nodes.find(n => n.id === otherId);
+                        const otherName = (otherNode?.data?.name as string) || "Desconhecido";
+                        return (
+                          <div key={edge.id} className="flex flex-col gap-1 p-2 rounded bg-background border border-border/50 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-foreground truncate flex-1" title={otherName}>
+                                {isSource ? "Para: " : "De: "} {otherName}
+                              </span>
+                              <button
+                                onClick={() => { removeEdge(edge.id); toast.success("Cabo removido."); }}
+                                className="text-muted-foreground hover:text-destructive transition p-1 rounded hover:bg-destructive/10"
+                                title="Excluir Cabo"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            {edge.data?.label && <span className="text-[10px] text-muted-foreground truncate">{edge.data.label as string}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="pt-3 border-t border-border/40">

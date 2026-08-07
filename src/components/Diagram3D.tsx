@@ -85,6 +85,56 @@ function createTextSprite(text: string) {
   return sprite;
 }
 
+function createSmallTextSprite(text: string) {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) return new THREE.Sprite();
+
+  const fontSize = 38;
+  context.font = `bold ${fontSize}px sans-serif`;
+  const metrics = context.measureText(text);
+  const textWidth = Math.ceil(metrics.width);
+
+  const scaleFactor = 2;
+  canvas.width = (textWidth + 40) * scaleFactor;
+  canvas.height = (fontSize + 20) * scaleFactor;
+
+  context.scale(scaleFactor, scaleFactor);
+
+  // Background
+  context.fillStyle = "rgba(10, 25, 47, 0.92)";
+  context.beginPath();
+  context.roundRect(2, 2, textWidth + 36, fontSize + 16, 9);
+  context.fill();
+
+  // Border
+  context.lineWidth = 2.5;
+  context.strokeStyle = "#38bdf8";
+  context.stroke();
+
+  // Text
+  context.fillStyle = "#f0f9ff";
+  context.font = `bold ${fontSize}px sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text, (textWidth + 40) / 2, (fontSize + 20) / 2 + 1);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  const spriteMaterial = new THREE.SpriteMaterial({
+    map: texture,
+    depthTest: false,
+    depthWrite: false
+  });
+  const sprite = new THREE.Sprite(spriteMaterial);
+  sprite.renderOrder = 999;
+  // World-scale: legível dentro do rack
+  sprite.scale.set((textWidth + 40) * 0.009, (fontSize + 20) * 0.009, 1);
+  return sprite;
+}
+
 
 
 function createProceduralSwitch(ports: number, activePortsCount: number) {
@@ -2000,7 +2050,7 @@ function createCeiling(widthM: number, depthM: number) {
   const frame = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06 * scale, d), frameMat);
   frame.position.y = height;
   frame.receiveShadow = true;
-    group.add(frame);
+  group.add(frame);
   const gridMat = new THREE.MeshStandardMaterial({ color: 0xa0b0c0, metalness: 0.4, roughness: 0.7, transparent: true, opacity: 0.6 });
   const gridCountX = Math.max(2, Math.ceil(w / (1.5 * scale)));
   const gridCountZ = Math.max(2, Math.ceil(d / (1.5 * scale)));
@@ -2078,6 +2128,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
   const addEdge = useDiagram((s) => s.addEdge);
   const removeEdge = useDiagram((s) => s.removeEdge);
   const updateEdge = useDiagram((s) => s.updateEdge);
+  const locations = useDiagram((s) => s.locations);
+  const activeLocationId = useDiagram((s) => s.activeLocationId);
   const [connectMode, setConnectMode] = useState(false);
   const [connectPowerMode, setConnectPowerMode] = useState(false);
   const [connectSourceId, setConnectSourceId] = useState<string | null>(null);
@@ -2259,7 +2311,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     sceneRef.current = scene;
 
     const aspect = width / height;
-    const frustumSize = 40;
+    const frustumSize = 20;
     const camera = new THREE.OrthographicCamera(
       (frustumSize * aspect) / -2,
       (frustumSize * aspect) / 2,
@@ -2268,8 +2320,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       -100,
       1000
     );
-    // True isometric angle
-    camera.position.set(30, 30, 30);
+    // True isometric angle — closer initial position
+    camera.position.set(15, 15, 15);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true, alpha: true });
@@ -2386,15 +2438,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         floor.material.color.setHex(floorColor);
       }
 
-      if (gridHelper) {
-        scene.remove(gridHelper);
-        gridHelper.geometry.dispose();
-        if (Array.isArray(gridHelper.material)) {
-          gridHelper.material.forEach((m) => m.dispose());
-        } else {
-          gridHelper.material.dispose();
-        }
-      }
+      if (gridHelper) scene.remove(gridHelper);
       gridHelper = new THREE.GridHelper(250, 120, grid1, grid2);
       gridHelper.position.y = -0.01;
       scene.add(gridHelper);
@@ -2661,7 +2705,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
       const w = canvasRef.current.clientWidth;
       const h = canvasRef.current.clientHeight;
       const newAspect = w / h;
-      const frustumSize = 40;
+      const frustumSize = 20;
       (camera as THREE.OrthographicCamera).left = (frustumSize * newAspect) / -2;
       (camera as THREE.OrthographicCamera).right = (frustumSize * newAspect) / 2;
       (camera as THREE.OrthographicCamera).top = frustumSize / 2;
@@ -2885,10 +2929,14 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         }
       }
 
-      // Add text label sprite (only if not inside a rack)
-      if (!node.data.rackId) {
+      // Add text label sprite — small crisp version inside racks, full-size above free devices
+      if (node.data.rackId) {
+        const labelSprite = createSmallTextSprite(node.data.name || "Dispositivo");
+        labelSprite.position.set(0, 0, 0.55); // slightly in front of the device face
+        deviceGroup.add(labelSprite);
+      } else {
         const labelSprite = createTextSprite(node.data.name || "Dispositivo");
-        labelSprite.position.set(0, 1.5, 0); // Position slightly above
+        labelSprite.position.set(0, 1.5, 0);
         deviceGroup.add(labelSprite);
       }
 
@@ -2959,7 +3007,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         }
       }
 
-      const dPos = node.data.position3d || { x: (nodes.indexOf(node) * 3) - 4, y: 0.5, z: 4 };
+      const dPos = node.data.position3d || { x: (nodes.indexOf(node) * 3) - 4, y: 0, z: 4 };
       deviceGroup.position.set((dPos as any).x, (dPos as any).y, (dPos as any).z);
       deviceGroup.rotation.set(0, (node.data.rotation3d as any)?.y || 0, 0);
       computedPositions.set(node.id, new THREE.Vector3((dPos as any).x, (dPos as any).y, (dPos as any).z));
@@ -2969,7 +3017,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     });
 
     // Pass 3: Structural elements
-    nodes.filter((n) => ["wall", "door", "lamp", "ceiling"].includes(n.data.kind as string)).forEach((node) => {
+    nodes.filter((n) => ["wall", "door", "lamp", "ceiling", "floor"].includes(n.data.kind as string)).forEach((node) => {
       const d = node.data as any;
       const pos = d.position3d || { x: (nodes.indexOf(node) * 7), y: 0, z: -10 };
       let structGroup: THREE.Group;
@@ -2983,6 +3031,13 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         structGroup = createLamp(parseInt(hexStr, 16), d.intensity ?? 2);
       } else if (d.kind === "ceiling") {
         structGroup = createCeiling(15, 15);
+      } else if (d.kind === "floor") {
+        structGroup = new THREE.Group();
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8, metalness: 0.1 });
+        const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(d.width ?? 10, d.width ?? 10), floorMat);
+        floorMesh.rotation.x = -Math.PI / 2;
+        floorMesh.receiveShadow = true;
+        structGroup.add(floorMesh);
       } else {
         return;
       }
@@ -3194,7 +3249,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     const ctrl = controlsRef.current;
     if (cam && ctrl) {
       ctrl.target.set(0, 2, 0);
-      cam.position.set(30, 30, 30);
+      cam.position.set(15, 15, 15);
       cam.zoom = 1;
       cam.updateProjectionMatrix();
       ctrl.update();
@@ -3207,7 +3262,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     const ctrl = controlsRef.current;
     if (cam && ctrl) {
       ctrl.target.set(0, 0, 0);
-      cam.position.set(0.01, 50, 0);
+      cam.position.set(0.01, 25, 0);
       cam.zoom = 1;
       cam.updateProjectionMatrix();
       ctrl.update();
@@ -3246,7 +3301,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         const worldPos = new THREE.Vector3();
         selectedMesh.getWorldPosition(worldPos);
         ctrl.target.copy(worldPos);
-        cam.position.set(worldPos.x + 15, worldPos.y + 15, worldPos.z + 15);
+        cam.position.set(worldPos.x + 8, worldPos.y + 8, worldPos.z + 8);
         cam.zoom = 1.2;
         cam.updateProjectionMatrix();
         ctrl.update();
@@ -3274,7 +3329,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     }
 
     ctrl.target.set(avgX, avgY, avgZ);
-    cam.position.set(avgX + 25, avgY + 20, avgZ + 25);
+    cam.position.set(avgX + 12, avgY + 10, avgZ + 12);
     cam.zoom = 1.0;
     cam.updateProjectionMatrix();
     ctrl.update();
@@ -3359,21 +3414,6 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         >
           <Upload className="w-3.5 h-3.5" />
           Exportar 3D
-        </button>
-        <button
-          onClick={() => {
-            if (!canvasRef.current) { toast.error('Canvas nÃ£o disponÃ­vel'); return; }
-            const dataUrl = canvasRef.current.toDataURL('image/png');
-            const w = window.open('', '_blank');
-            if (!w) { toast.error('NÃ£o foi possÃ­vel abrir nova aba'); return; }
-            w.document.write(`<html><head><title>Export Diagram</title></head><body style="margin:0"><img src="${dataUrl}" style="width:100%;height:auto;"/></body></html>`);
-            w.document.close();
-          }}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-card text-card-foreground border border-border shadow-md hover:bg-secondary transition text-xs font-semibold uppercase tracking-wider"
-          title="Abrir imagem para imprimir/salvar em PDF"
-        >
-          <Upload className="w-3.5 h-3.5" />
-          Exportar PDF
         </button>
         {toggleFullscreen && (
           <button
@@ -3555,7 +3595,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">Nome do Dispositivo</label>
-                <input type="text" value={editingName} onChange={(e) => setEditingName(e.target.value)}
+                <input type="text" value={editingName} onChange={(e) => { setEditingName(e.target.value); updateNodeData(selectedNodeId!, { name: e.target.value }); }}
                   className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all" />
               </div>
 
@@ -3577,7 +3617,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
               {selectedNode.data.kind === "camera" && (
                 <div>
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">EndereÃ§o IP</label>
-                  <input type="text" value={editingIp} onChange={(e) => setEditingIp(e.target.value)}
+                  <input type="text" value={editingIp} onChange={(e) => { setEditingIp(e.target.value); updateNodeData(selectedNodeId!, { ip: e.target.value }); }}
                     className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all" />
                 </div>
               )}
@@ -3693,7 +3733,17 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                     <label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">Selecionar Cabinet Rack</label>
                     <select
                       value={mountingRackId}
-                      onChange={(e) => setMountingRackId(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setMountingRackId(val);
+                        if (val === "none") {
+                          updateNodeData(selectedNodeId!, { rackId: undefined, rackUnit: undefined });
+                        } else {
+                          const collidesWith = checkRackCollision(val, mountingU, selectedNodeId!, selectedNode.data.rackUHeight ?? 1);
+                          if (collidesWith) { toast.error(`Colisão com "${collidesWith.data.name}"`); return; }
+                          updateNodeData(selectedNodeId!, { rackId: val, rackUnit: mountingU, position3d: undefined, rotation3d: undefined });
+                        }
+                      }}
                       className="w-full bg-background border border-input rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
                     >
                       <option value="none">Nenhum (Solto no espaÃ§o)</option>
@@ -3711,7 +3761,13 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                         min={1}
                         max={((nodes.find((n) => n.id === mountingRackId)?.data as any)?.units ?? (nodes.find((n) => n.id === mountingRackId)?.data as any)?.shelves ?? 24) - (selectedNode.data.rackUHeight ?? 1) + 1}
                         value={mountingU}
-                        onChange={(e) => setMountingU(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(e) => {
+                          const val = Math.max(1, parseInt(e.target.value) || 1);
+                          setMountingU(val);
+                          const collidesWith = checkRackCollision(mountingRackId, val, selectedNodeId!, selectedNode.data.rackUHeight ?? 1);
+                          if (collidesWith) { toast.error(`Colisão com "${collidesWith.data.name}"`); return; }
+                          updateNodeData(selectedNodeId!, { rackId: mountingRackId, rackUnit: val, position3d: undefined, rotation3d: undefined });
+                        }}
                         className="w-full bg-background border border-input rounded-lg px-2.5 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
                       />
                     </div>
@@ -3736,7 +3792,15 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                         <span className="font-mono text-foreground">{(value as number).toFixed(1)}m</span>
                       </div>
                       <input type="range" min={min} max={max} step={0.5} value={value as number}
-                        onChange={(e) => (setter as (v: number) => void)(parseFloat(e.target.value))}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          (setter as (v: number) => void)(v);
+                          const patch: any = {};
+                          if (label.includes("X")) patch.x = v;
+                          if (label.includes("Y")) patch.y = v;
+                          if (label.includes("Z")) patch.z = v;
+                          updateNodeData(selectedNodeId!, { position3d: { ...(selectedNode.data.position3d as any || { x: positionX, y: positionY, z: positionZ }), ...patch } });
+                        }}
                         className="w-full accent-cyan-500" />
                     </div>
                   ))}
@@ -3746,7 +3810,11 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                       <span className="font-mono text-foreground">{((rotationY * 180) / Math.PI).toFixed(0)}Â°</span>
                     </div>
                     <input type="range" min={-Math.PI} max={Math.PI} step={Math.PI / 12} value={rotationY}
-                      onChange={(e) => setRotationY(parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        setRotationY(v);
+                        updateNodeData(selectedNodeId!, { rotation3d: { ...(selectedNode.data.rotation3d as any || { x: 0, y: rotationY, z: 0 }), y: v } });
+                      }}
                       className="w-full accent-cyan-500" />
                   </div>
                 </div>
@@ -3774,18 +3842,12 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
               </div>
             </div>
 
-            <div className="flex gap-2 pt-3 border-t border-border/40">
+            <div className="pt-3 border-t border-border/40">
               <button
                 onClick={() => { removeNode(selectedNodeId!); setSelectedNodeId(null); toast.success("Dispositivo removido."); }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-destructive/20 text-destructive hover:bg-destructive/10 text-xs font-medium transition"
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-destructive/20 text-destructive hover:bg-destructive/10 text-xs font-medium transition"
               >
-                <Trash2 className="w-4 h-4" /> Excluir
-              </button>
-              <button
-                onClick={saveNodeSettings}
-                className="flex-2 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-bold hover:glow-cyan text-xs transition"
-              >
-                Salvar Configs
+                <Trash2 className="w-4 h-4" /> Excluir Dispositivo
               </button>
             </div>
           </div>

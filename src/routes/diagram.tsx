@@ -22,6 +22,7 @@ import { WallNode } from "@/components/nodes/WallNode";
 import { DoorNode } from "@/components/nodes/DoorNode";
 import { LampNode } from "@/components/nodes/LampNode";
 import { CeilingNode } from "@/components/nodes/CeilingNode";
+import { FloorNode } from "@/components/nodes/FloorNode";
 import { OltNode } from "@/components/nodes/OltNode";
 import { DioNode } from "@/components/nodes/DioNode";
 import { RouterNode } from "@/components/nodes/RouterNode";
@@ -39,9 +40,12 @@ import { useDiagram } from "@/lib/store";
 import type { NodeData } from "@/lib/types";
 import {
   Box, FolderOpen, Folder, Layers, MapPin, Plus, Maximize2, ChevronLeft,
-  Trash2, FolderPlus, ChevronRight, ChevronDown, List, LayoutGrid, Network, Search
+  Trash2, FolderPlus, ChevronRight, ChevronDown, List, LayoutGrid, Network, Search, Zap,
+  FileText
 } from "lucide-react";
 import { DeletableEdge } from "@/components/DeletableEdge";
+import { toPng } from "html-to-image";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/diagram")({
   head: () => ({
@@ -58,6 +62,9 @@ function DiagramPage() {
   const edges = useDiagram((s) => s.edges);
   const locations = useDiagram((s) => s.locations);
   const activeLocationId = useDiagram((s) => s.activeLocationId);
+
+  const totalPower = useMemo(() => nodes.reduce((acc, n) => acc + ((n.data as any).powerWatts || 0), 0), [nodes]);
+  const totalAmperage = useMemo(() => nodes.reduce((acc, n) => acc + ((n.data as any).amperage || 0), 0), [nodes]);
   const setNodes = useDiagram((s) => s.setNodes);
   const setEdges = useDiagram((s) => s.setEdges);
   const removeNode = useDiagram((s) => s.removeNode);
@@ -65,6 +72,353 @@ function DiagramPage() {
   const createLocation = useDiagram((s) => s.createLocation);
   const deleteLocation = useDiagram((s) => s.deleteLocation);
   const selectLocation = useDiagram((s) => s.selectLocation);
+
+  const handleExportPDF = async () => {
+    let wasIn3D = false;
+    if (viewMode === "3d") {
+      wasIn3D = true;
+      setViewMode("2d");
+      setIsFullscreen(false);
+      // Aguardar a renderização do React Flow
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    const element = document.querySelector('.react-flow__viewport') as HTMLElement || document.querySelector('.react-flow') as HTMLElement;
+    if (!element) {
+      toast.error('Diagrama 2D não encontrado para exportação');
+      if (wasIn3D) setViewMode("3d");
+      return;
+    }
+
+    try {
+      // Captura o diagrama 2D
+      const dataUrl = await toPng(element, { backgroundColor: theme === 'light' ? '#ffffff' : '#0a0f19' });
+      
+      const w = window.open('', '_blank');
+      if (!w) { toast.error('Não foi possível abrir nova aba para o PDF'); return; }
+
+      const dataStr = new Date().toLocaleString('pt-BR');
+      const popName = "Diagrama de Rede";
+      const locName = locations[activeLocationId]?.name || popName;
+
+      const equipmentsHtml = nodes.map(n => {
+        const d = n.data as any;
+        const locationStr = d.rackId 
+          ? `Rack U${d.rackUnit}` 
+          : (['wall','floor','ceiling','door'].includes(d.kind) ? 'Estrutura' : 'Chão livre');
+        const ipStr = d.ip ? d.ip : '-';
+        const pwrStr = d.powerWatts ? `${d.powerWatts}W` : '-';
+        return `<tr>
+          <td><strong>${d.name || 'Sem nome'}</strong></td>
+          <td><span class="badge">${d.kind}</span></td>
+          <td>${locationStr}</td>
+          <td><span style="font-family: monospace;">${ipStr}</span></td>
+          <td>${pwrStr}</td>
+        </tr>`;
+      }).join('');
+
+      const linksHtml = edges.map(e => {
+         const src = nodes.find(n => n.id === e.source)?.data.name || e.source;
+         const tgt = nodes.find(n => n.id === e.target)?.data.name || e.target;
+         const typeBadge = e.data?.isPower 
+           ? '<span class="badge power">⚡ Energia</span>' 
+           : '<span class="badge">📡 Dados</span>';
+         const label = e.data?.label || '-';
+         return `<tr>
+           <td><strong>${src}</strong></td>
+           <td><strong>${tgt}</strong></td>
+           <td>${typeBadge}</td>
+           <td>${label}</td>
+         </tr>`;
+      }).join('');
+
+      w.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório de Infraestrutura - ${locName}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #0ea5e9;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --bg-alt: #f8fafc;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', sans-serif; 
+      color: var(--text);
+      line-height: 1.5;
+      margin: 0;
+      padding: 40px;
+      background: #f1f5f9;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+
+    .title-block h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      color: var(--text);
+    }
+
+    .title-block p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-alt);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 40px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .diagram-container {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+      background: var(--bg-alt);
+      margin-bottom: 32px;
+      overflow: hidden;
+    }
+
+    .diagram-container img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      background: var(--bg-alt);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e0f2fe;
+      color: #0369a1;
+      text-transform: capitalize;
+    }
+
+    .badge.power {
+      background: #fef9c3;
+      color: #a16207;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      transition: transform 0.2s;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; padding: 0; max-width: 100%; border: none; }
+      .controls { display: none !important; }
+      .diagram-container { page-break-inside: avoid; border: none; background: transparent; padding: 0; }
+      .stats-grid { gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+      .stat-card { padding: 12px; }
+      .stat-value { font-size: 18px; }
+      .stat-label { font-size: 10px; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      th { background: #f8fafc !important; }
+      @page { margin: 1cm; size: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="controls no-print">
+    <button class="btn btn-secondary" onclick="window.close()">
+      Fechar
+    </button>
+    <button class="btn btn-primary" onclick="window.print()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      Imprimir / Salvar PDF
+    </button>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="title-block">
+        <h1>Relatório de Infraestrutura</h1>
+        <p>Localidade: <strong>${locName}</strong></p>
+      </div>
+      <div style="text-align: right; color: var(--text-muted); font-size: 14px;">
+        Gerado em<br/><strong>${dataStr}</strong>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Equipamentos</div>
+        <div class="stat-value">${nodes.filter((n: any) => !['wall', 'door', 'lamp', 'ceiling', 'floor'].includes(n.data.kind as string)).length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Conexões</div>
+        <div class="stat-value">${edges.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Consumo (Watts)</div>
+        <div class="stat-value">${totalPower} W</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Corrente (Amperes)</div>
+        <div class="stat-value">${totalAmperage.toFixed(1)} A</div>
+      </div>
+    </div>
+
+    <div class="section-title">Diagrama 2D</div>
+    <div class="diagram-container">
+      <img src="${dataUrl}" alt="Diagrama 2D" />
+    </div>
+
+    <div class="section-title">Inventário de Equipamentos</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Tipo</th>
+          <th>Localização</th>
+          <th>Endereço IP</th>
+          <th>Consumo</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${equipmentsHtml || '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Nenhum equipamento cadastrado.</td></tr>'}
+      </tbody>
+    </table>
+
+    <div class="section-title">Mapa de Conexões</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Origem</th>
+          <th>Destino</th>
+          <th>Tipo de Link</th>
+          <th>Identificação (Label)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${linksHtml || '<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">Nenhuma ligação cadastrada.</td></tr>'}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>`);
+      w.document.close();
+      if (wasIn3D) {
+        setViewMode("3d");
+      }
+    } catch (e) {
+      toast.error('Erro ao capturar diagrama 2D');
+      if (wasIn3D) setViewMode("3d");
+    }
+  };
 
   const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -88,6 +442,7 @@ function DiagramPage() {
     door: DoorNode,
     lamp: LampNode,
     ceiling: CeilingNode,
+    floor: FloorNode,
     olt: OltNode,
     dio: DioNode,
     router: RouterNode,
@@ -461,6 +816,15 @@ function DiagramPage() {
                     <Stat label="Switches" value={nodes.filter((n) => (n.data as NodeData).kind === "switch").length} />
                     <Stat label="Câmeras" value={nodes.filter((n) => (n.data as NodeData).kind === "camera").length} />
                     <Stat label="Links" value={edges.length} />
+                    {totalPower > 0 && (
+                      <div className="flex items-center gap-1.5 pl-4 border-l border-border/40">
+                        <Zap className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                        <div>
+                          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Consumo</div>
+                          <div className="font-display text-base font-semibold text-yellow-500">{totalPower}W{totalAmperage > 0 ? ` / ${totalAmperage.toFixed(1)}A` : ""}</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex bg-secondary/60 p-1 rounded-md border border-border/40">
@@ -483,6 +847,15 @@ function DiagramPage() {
                       3D
                     </button>
                   </div>
+                  
+                  <button
+                    onClick={handleExportPDF}
+                    className="flex items-center gap-1.5 px-3 py-1.5 ml-2 rounded-md bg-primary/10 text-primary border border-primary/30 shadow-sm hover:bg-primary/20 transition text-[10px] font-semibold uppercase tracking-wider"
+                    title="Exportar Relatório e Diagrama 2D"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Relatório
+                  </button>
                 </div>
               </div>
 
@@ -492,7 +865,7 @@ function DiagramPage() {
                 {viewMode === "2d" ? (
                   <div className="relative w-full h-full border border-border/60 rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--color-background)" }}>
                     <ReactFlow
-                      nodes={nodes}
+                      nodes={nodes.filter(n => !['wall', 'floor', 'ceiling', 'door', 'lamp'].includes((n.data as NodeData).kind))}
                       edges={edges}
                       onNodesChange={onNodesChange}
                       onEdgesChange={onEdgesChange}

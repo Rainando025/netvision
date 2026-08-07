@@ -34,6 +34,7 @@ import { RectifierNode } from "@/components/nodes/RectifierNode";
 import { SolarNode } from "@/components/nodes/SolarNode";
 import { PatchPanelNode } from "@/components/nodes/PatchPanelNode";
 import { DwdmNode } from "@/components/nodes/DwdmNode";
+import { EciNode } from "@/components/nodes/EciNode";
 import { AddDeviceMenu } from "@/components/AddDeviceMenu";
 import { Diagram3D } from "@/components/Diagram3D";
 import { useDiagram } from "@/lib/store";
@@ -454,6 +455,7 @@ function DiagramPage() {
     solar: SolarNode,
     patchpanel: PatchPanelNode,
     dwdm: DwdmNode,
+    eci: EciNode,
   }), []);
 
   const onNodesChange = useCallback(

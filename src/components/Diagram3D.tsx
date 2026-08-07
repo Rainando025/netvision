@@ -891,7 +891,243 @@ function createProceduralRouter(interfaces: number) {
 
   return { mesh: group, leds };
 }
+function createProceduralEci() {
+  const group = new THREE.Group();
+
+  // Chassis dimensions — 2U rack-mount, wide-chassis style
+  const width  = 5.8;
+  const depth  = 2.6;
+  const height = 0.9; // 2U
+  const faceZ  = depth / 2;
+
+  // ─── Materials ────────────────────────────────────────────────────────────
+  const bodyMat   = new THREE.MeshStandardMaterial({ color: 0x1b2a45, metalness: 0.45, roughness: 0.40 });
+  const faceAccent= new THREE.MeshStandardMaterial({ color: 0x1e3060, metalness: 0.35, roughness: 0.30 });
+  const earMat    = new THREE.MeshStandardMaterial({ color: 0x1a2840, metalness: 0.50, roughness: 0.35 });
+  const blackMat  = new THREE.MeshStandardMaterial({ color: 0x080e1f, metalness: 0.15, roughness: 0.55 });
+  const silverMat = new THREE.MeshStandardMaterial({ color: 0xa0b0c8, metalness: 0.65, roughness: 0.22 });
+  const rj45Mat   = new THREE.MeshStandardMaterial({ color: 0x0a1830, metalness: 0.2,  roughness: 0.6  });
+  const lcBlueMat = new THREE.MeshStandardMaterial({ color: 0x1a5fd0, metalness: 0.10, roughness: 0.30 });
+  const lcDimMat  = new THREE.MeshStandardMaterial({ color: 0x0e1e40, metalness: 0.10, roughness: 0.50 });
+  const eci9603Mat= new THREE.MeshStandardMaterial({ color: 0x7ec8ff, metalness: 0,    roughness: 0.9  });
+  const greenLed  = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+  const dimLed    = new THREE.MeshBasicMaterial({ color: 0x1a2a1a });
+  const leds: THREE.Mesh[] = [];
+
+  // ─── Main chassis body ───────────────────────────────────────────────────
+  const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), bodyMat);
+  body.castShadow = true;
+  body.receiveShadow = true;
+  group.add(body);
+
+  // ─── Face plate (slightly proud of body) ─────────────────────────────────
+  const face = new THREE.Mesh(new THREE.BoxGeometry(width, height * 0.96, 0.05), faceAccent);
+  face.position.set(0, 0, faceZ + 0.025);
+  group.add(face);
+
+  // ─── Top edge strip (darker groove) ──────────────────────────────────────
+  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(width, 0.04, 0.06), blackMat);
+  topEdge.position.set(0, height / 2 - 0.02, faceZ + 0.03);
+  group.add(topEdge);
+  const botEdge = topEdge.clone();
+  botEdge.position.set(0, -height / 2 + 0.02, faceZ + 0.03);
+  group.add(botEdge);
+
+  // ─── Rack ears ───────────────────────────────────────────────────────────
+  for (const side of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.50, height, 0.28), earMat);
+    ear.position.set(side * (width / 2 + 0.25), 0, faceZ - 0.14);
+    group.add(ear);
+
+    // Mounting holes (3 per ear)
+    for (let h = 0; h < 3; h++) {
+      const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 8), blackMat);
+      hole.rotation.z = Math.PI / 2;
+      hole.position.set(side * (width / 2 + 0.25), -0.15 + h * 0.15, faceZ - 0.14);
+      group.add(hole);
+    }
+  }
+
+  // ─── LEFT MODULE — Management card (SFP+ ports + RJ45) ──────────────────
+  const mgmtX    = -width / 2 + 0.9;   // center of left module
+  const mgmtW    = 1.5;
+  const mgmtH    = height * 0.78;
+
+  const mgmtCard = new THREE.Mesh(new THREE.BoxGeometry(mgmtW, mgmtH, 0.05), faceAccent);
+  mgmtCard.position.set(mgmtX, 0, faceZ + 0.04);
+  group.add(mgmtCard);
+
+  // SFP+ cages — 2 rows × 6
+  const sfpW = 0.12; const sfpH = 0.09; const sfpGap = 0.13;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 6; col++) {
+      const cage = new THREE.Mesh(new THREE.BoxGeometry(sfpW, sfpH, 0.09), blackMat);
+      cage.position.set(
+        mgmtX - mgmtW / 2 + 0.12 + col * sfpGap,
+        0.12 - row * 0.14,
+        faceZ + 0.07
+      );
+      group.add(cage);
+    }
+  }
+
+  // RJ45 management ports × 2
+  for (let p = 0; p < 2; p++) {
+    const rj = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.10, 0.09), rj45Mat);
+    rj.position.set(mgmtX - mgmtW / 2 + 0.12 + p * 0.18, -0.24, faceZ + 0.07);
+    group.add(rj);
+
+    // Link LED on RJ45
+    const rjLed = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 6), greenLed);
+    rjLed.position.set(mgmtX - mgmtW / 2 + 0.11 + p * 0.18, -0.16, faceZ + 0.08);
+    leds.push(rjLed);
+    group.add(rjLed);
+  }
+
+  // ─── Module divider groove ───────────────────────────────────────────────
+  const dividerX = mgmtX + mgmtW / 2 + 0.06;
+  const divider  = new THREE.Mesh(new THREE.BoxGeometry(0.06, height * 0.90, 0.04), blackMat);
+  divider.position.set(dividerX, 0, faceZ + 0.04);
+  group.add(divider);
+
+  // ─── RIGHT SIDE — Two optical line modules ───────────────────────────────
+  // Each module occupies roughly half the remaining width
+  const optModuleStartX = dividerX + 0.08;
+  const optModuleW      = (width / 2 - 0.55 - (optModuleStartX - 0)) / 2 + 0.0;
+  const lcCols = 8;
+  const lcRows = 2;
+  const lcW    = 0.11;
+  const lcH    = 0.085;
+  const lcGapX = 0.115;
+  const lcGapY = 0.115;
+
+  for (let mod = 0; mod < 2; mod++) {
+    const modCenterX = optModuleStartX + mod * (optModuleW + 0.06) + optModuleW / 2;
+
+    // Module face card
+    const modCard = new THREE.Mesh(
+      new THREE.BoxGeometry(optModuleW, height * 0.82, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0x182038, metalness: 0.3, roughness: 0.4 })
+    );
+    modCard.position.set(modCenterX, 0, faceZ + 0.04);
+    group.add(modCard);
+
+    // LC connector grid 2 rows × 8 cols
+    const gridStartX = modCenterX - (lcCols - 1) * lcGapX / 2;
+    const gridStartY = (lcRows - 1) * lcGapY / 2;
+
+    for (let row = 0; row < lcRows; row++) {
+      for (let col = 0; col < lcCols; col++) {
+        const portIdx = mod * (lcCols * lcRows) + row * lcCols + col;
+        const active  = portIdx < 8; // first 8 ports active by default
+        const connMat = active ? lcBlueMat : lcDimMat;
+        const conn = new THREE.Mesh(new THREE.BoxGeometry(lcW, lcH, 0.09), connMat);
+        conn.position.set(
+          gridStartX + col * lcGapX,
+          gridStartY - row * lcGapY,
+          faceZ + 0.07
+        );
+        group.add(conn);
+
+        // Inner LC ferrule stub
+        const ferrule = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.02, 0.02, 0.06, 6),
+          new THREE.MeshStandardMaterial({ color: active ? 0x4a9eff : 0x1a3060, metalness: 0.1, roughness: 0.3 })
+        );
+        ferrule.rotation.x = Math.PI / 2;
+        ferrule.position.set(
+          gridStartX + col * lcGapX,
+          gridStartY - row * lcGapY,
+          faceZ + 0.09
+        );
+        group.add(ferrule);
+
+        // Status LED per port
+        if (active) {
+          const portLed = new THREE.Mesh(
+            new THREE.SphereGeometry(0.015, 6, 6),
+            new THREE.MeshBasicMaterial({ color: 0x3b82f6 })
+          );
+          portLed.position.set(
+            gridStartX + col * lcGapX + lcW / 2 - 0.02,
+            gridStartY - row * lcGapY + lcH / 2 - 0.015,
+            faceZ + 0.09
+          );
+          leds.push(portLed);
+          group.add(portLed);
+        }
+      }
+    }
+
+    // Module separator line at top
+    const modLabel = new THREE.Mesh(
+      new THREE.BoxGeometry(optModuleW * 0.8, 0.03, 0.01),
+      silverMat
+    );
+    modLabel.position.set(modCenterX, height / 2 * 0.72, faceZ + 0.07);
+    group.add(modLabel);
+
+    // Module status LED (top right corner of each module)
+    const modLed = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), mod === 0 ? greenLed : greenLed);
+    modLed.position.set(modCenterX + optModuleW / 2 - 0.08, height / 2 * 0.7, faceZ + 0.08);
+    leds.push(modLed);
+    group.add(modLed);
+  }
+
+  // ─── FAR RIGHT — Model plate + power button ──────────────────────────────
+  const plateX = width / 2 - 0.22;
+  const modelPlate = new THREE.Mesh(new THREE.BoxGeometry(0.30, height * 0.86, 0.04), blackMat);
+  modelPlate.position.set(plateX, 0, faceZ + 0.04);
+  group.add(modelPlate);
+
+  // "9603" label (thin horizontal bar simulating engraved text)
+  for (let i = 0; i < 4; i++) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.025, 0.015), eci9603Mat);
+    bar.position.set(plateX, 0.15 - i * 0.075, faceZ + 0.07);
+    group.add(bar);
+  }
+
+  // Power button
+  const pwrBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.04, 12), silverMat);
+  pwrBtn.rotation.x = Math.PI / 2;
+  pwrBtn.position.set(plateX, -0.22, faceZ + 0.07);
+  group.add(pwrBtn);
+
+  const pwrLed = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), greenLed);
+  pwrLed.position.set(plateX, -0.32, faceZ + 0.08);
+  leds.push(pwrLed);
+  group.add(pwrLed);
+
+  // ─── System LEDs top bar ─────────────────────────────────────────────────
+  const sysLedColors = [0x22c55e, 0x22c55e, 0xf59e0b, 0x334155, 0x334155];
+  sysLedColors.forEach((col, i) => {
+    const led = new THREE.Mesh(
+      new THREE.SphereGeometry(0.022, 8, 8),
+      new THREE.MeshBasicMaterial({ color: col })
+    );
+    led.position.set(-width / 2 + 0.35 + i * 0.13, height / 2 - 0.07, faceZ + 0.07);
+    leds.push(led);
+    group.add(led);
+  });
+
+  // ─── Rear panel ──────────────────────────────────────────────────────────
+  const rear = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), blackMat);
+  rear.position.set(0, 0, -faceZ + 0.04);
+  group.add(rear);
+
+  // Rear fan vents
+  for (let f = 0; f < 5; f++) {
+    const vent = new THREE.Mesh(new THREE.BoxGeometry(0.6, height * 0.7, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0x0a0f1e, metalness: 0.1, roughness: 0.8 }));
+    vent.position.set(-1.2 + f * 0.65, 0, -faceZ + 0.055);
+    group.add(vent);
+  }
+
+  return { mesh: group, leds };
+}
+
 function createProceduralDwdm() {
+
   const group = new THREE.Group();
 
   // Dimensions
@@ -2846,8 +3082,8 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     });
 
     // Pass 2: Devices
-    nodes.filter((n) => ["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "solar", "patchpanel", "dwdm", "rectifier"].includes(n.data.kind as string)).forEach((node) => {
-      const isSwitch = ["switch", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm", "rectifier"].includes(node.data.kind as string);
+    nodes.filter((n) => ["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "solar", "patchpanel", "dwdm", "rectifier", "eci"].includes(n.data.kind as string)).forEach((node) => {
+      const isSwitch = ["switch", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm", "rectifier", "eci"].includes(node.data.kind as string);
       let deviceGroup: THREE.Group | null = null;
       let ledList: THREE.Mesh[] = [];
 
@@ -2890,6 +3126,10 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         } else if (node.data.kind === "rectifier") {
           const rectData = node.data as any;
           const { mesh, leds } = createProceduralRectifier(rectData.modules ?? 3);
+          deviceGroup.add(mesh);
+          ledList = leds;
+        } else if (node.data.kind === "eci") {
+          const { mesh, leds } = createProceduralEci();
           deviceGroup.add(mesh);
           ledList = leds;
         } else if (node.data.kind === "router") {
@@ -2953,7 +3193,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           const kindUHeightMap: Record<string, number> = {
             switch: 2, olt: 4, dio: 2, router: 4, server: 2,
             stationary_battery: 6, inverter: 3, patchpanel: 1,
-            dwdm: 14, rectifier: 4,
+            dwdm: 14, rectifier: 4, eci: 2,
           };
           const autoUHeight = kindUHeightMap[node.data.kind as string] ?? 2;
           const uSlot = node.data.rackUnit ?? 1;
@@ -3003,6 +3243,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
           const absPos = new THREE.Vector3();
           deviceGroup.getWorldPosition(absPos);
           computedPositions.set(node.id, absPos);
+          if (ledList.length > 0) ledObjectsRef.current.set(node.id, ledList);
           return;
         }
       }
@@ -3722,7 +3963,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                 </div>
               )}
 
-              {["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm", "rectifier"].includes(selectedNode.data.kind as string) && (
+              {["switch", "camera", "olt", "dio", "router", "server", "stationary_battery", "inverter", "patchpanel", "dwdm", "rectifier", "eci"].includes(selectedNode.data.kind as string) && (
                 <div className="p-3 rounded-lg bg-secondary/50 border border-border/60 space-y-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400">
                     <Layers className="w-3.5 h-3.5" />

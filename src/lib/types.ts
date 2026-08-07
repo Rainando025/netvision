@@ -3,7 +3,7 @@ export type CameraType = "Dome" | "Bullet" | "PTZ" | "Fisheye" | "Box";
 
 export type DeviceStatus = "online" | "offline" | "warning";
 
-export type NodeDataKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier";
+export type NodeDataKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier" | "eci";
 
 export interface ThreeDAttributes {
   position3d?: { x: number; y: number; z: number };
@@ -140,6 +140,15 @@ export interface RectifierNodeData extends Record<string, unknown>, ThreeDAttrib
   modules: number; // Number of rectifier modules installed
 }
 
+export interface EciNodeData extends Record<string, unknown>, ThreeDAttributes {
+  kind: "eci";
+  name: string;
+  model: string;       // e.g. "9603"
+  lineModules: number; // 1 or 2 optical line modules
+  activePorts?: number; // how many LC ports are lit
+  ip?: string;
+}
+
 export type NodeData =
   | SwitchNodeData
   | CameraNodeData
@@ -158,7 +167,8 @@ export type NodeData =
   | SolarNodeData
   | PatchPanelNodeData
   | DwdmNodeData
-  | RectifierNodeData;
+  | RectifierNodeData
+  | EciNodeData;
 
 export interface ScannedDevice {
   ip: string;

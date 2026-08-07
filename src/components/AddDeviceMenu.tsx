@@ -7,7 +7,7 @@ import { useDiagram } from "@/lib/store";
 const SWITCH_TYPES: SwitchType[] = ["Gerenciável L2", "Gerenciável L3", "PoE", "Não Gerenciável"];
 const CAMERA_TYPES: CameraType[] = ["Dome", "Bullet", "PTZ", "Fisheye", "Box"];
 
-type DialogKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "floor" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier";
+type DialogKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "floor" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier" | "eci";
 
 export function AddDeviceMenu() {
   const [open, setOpen] = useState<null | DialogKind>(null);
@@ -92,6 +92,11 @@ export function AddDeviceMenu() {
               className="flex items-center gap-1.5 px-2 py-1 rounded-md glass hover:bg-secondary/60 transition text-xs font-medium border border-border/30">
               <Activity className="w-3.5 h-3.5 text-indigo-500" />
               DWDM
+            </button>
+            <button onClick={() => setOpen("eci")}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md glass hover:bg-secondary/60 transition text-xs font-medium border border-border/30">
+              <Activity className="w-3.5 h-3.5 text-sky-400" />
+              ECI
             </button>
           </motion.div>
         )}
@@ -204,6 +209,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     patchpanel: "Patch Panel 24P",
     dwdm: "OptiX OSN 9800",
     rectifier: "Retificadora DC",
+    eci: "ECI 9603",
   };
 
   const [name, setName] = useState(defaultNames[kind]);
@@ -304,6 +310,8 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
       addNode({ id, type: "dwdm", position, data: { kind: "dwdm", name, model: "OptiX OSN 9800", rackUHeight: 14, powerWatts, amperage } });
     } else if (kind === "rectifier") {
       addNode({ id, type: "rectifier", position, data: { kind: "rectifier", name, modules: rectifierModules, rackUHeight: 4, powerWatts, amperage } });
+    } else if (kind === "eci") {
+      addNode({ id, type: "eci", position, data: { kind: "eci", name, model: "9603", lineModules: 2, activePorts: 8, ip, rackUHeight: 2, powerWatts, amperage } });
     }
     onClose();
   };
@@ -328,6 +336,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     patchpanel: <GripHorizontal className="w-5 h-5" />,
     dwdm: <Activity className="w-5 h-5" />,
     rectifier: <Zap className="w-5 h-5" />,
+    eci: <Activity className="w-5 h-5" />,
   };
 
   const colorMap: Record<DialogKind, string> = {
@@ -350,6 +359,7 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     patchpanel: "bg-slate-500/15 text-slate-400",
     dwdm: "bg-indigo-500/15 text-indigo-500",
     rectifier: "bg-blue-500/15 text-blue-500",
+    eci: "bg-sky-500/15 text-sky-400",
   };
 
   const labelMap: Record<DialogKind, string> = {
@@ -372,9 +382,10 @@ function DeviceDialog({ kind, onClose }: { kind: DialogKind; onClose: () => void
     patchpanel: "Patch Panel RJ45",
     dwdm: "Equipamento DWDM",
     rectifier: "Sistema Retificador DC",
+    eci: "Plataforma Óptica ECI 9603",
   };
 
-  const isNetwork = ["switch", "camera", "rack", "olt", "dio", "router", "server", "inverter", "solar", "patchpanel", "dwdm", "rectifier"].includes(kind);
+  const isNetwork = ["switch", "camera", "rack", "olt", "dio", "router", "server", "inverter", "solar", "patchpanel", "dwdm", "rectifier", "eci"].includes(kind);
   const submitStyle = isNetwork
     ? "bg-primary text-primary-foreground hover:glow-cyan"
     : "bg-secondary text-foreground hover:bg-secondary/80 border border-border";

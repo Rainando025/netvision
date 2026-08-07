@@ -2000,7 +2000,7 @@ function createCeiling(widthM: number, depthM: number) {
   const frame = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06 * scale, d), frameMat);
   frame.position.y = height;
   frame.receiveShadow = true;
-  group.add(frame);
+    group.add(frame);
   const gridMat = new THREE.MeshStandardMaterial({ color: 0xa0b0c0, metalness: 0.4, roughness: 0.7, transparent: true, opacity: 0.6 });
   const gridCountX = Math.max(2, Math.ceil(w / (1.5 * scale)));
   const gridCountZ = Math.max(2, Math.ceil(d / (1.5 * scale)));
@@ -2016,6 +2016,54 @@ function createCeiling(widthM: number, depthM: number) {
   }
   return group;
 }
+
+const safelyDisposeObject = (obj: THREE.Object3D) => {
+  obj.traverse((child) => {
+    // 1. Sprites are always procedural and need to be disposed
+    if (child instanceof THREE.Sprite || (child as any).isSprite) {
+      const sprite = child as THREE.Sprite;
+      if (sprite.material) {
+        if (sprite.material.map) {
+          sprite.material.map.dispose();
+        }
+        sprite.material.dispose();
+      }
+      return;
+    }
+
+    // 2. Check if child or any parent/ancestor is a custom model
+    let isCustom = false;
+    let current: THREE.Object3D | null = child;
+    while (current) {
+      if (current.userData && current.userData.isCustomModel) {
+        isCustom = true;
+        break;
+      }
+      current = current.parent;
+    }
+
+    if (isCustom) return;
+
+    // 3. Dispose procedural mesh resources
+    if (child instanceof THREE.Mesh || (child as any).isMesh) {
+      const mesh = child as THREE.Mesh;
+      if (mesh.geometry) {
+        mesh.geometry.dispose();
+      }
+      if (mesh.material) {
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((mat) => {
+            if (mat.map) mat.map.dispose();
+            mat.dispose();
+          });
+        } else {
+          if (mesh.material.map) mesh.material.map.dispose();
+          mesh.material.dispose();
+        }
+      }
+    }
+  });
+};
 
 // â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -2338,7 +2386,15 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         floor.material.color.setHex(floorColor);
       }
 
-      if (gridHelper) scene.remove(gridHelper);
+      if (gridHelper) {
+        scene.remove(gridHelper);
+        gridHelper.geometry.dispose();
+        if (Array.isArray(gridHelper.material)) {
+          gridHelper.material.forEach((m) => m.dispose());
+        } else {
+          gridHelper.material.dispose();
+        }
+      }
       gridHelper = new THREE.GridHelper(250, 120, grid1, grid2);
       gridHelper.position.y = -0.01;
       scene.add(gridHelper);
@@ -2628,6 +2684,25 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
         renderer.domElement.removeEventListener("wheel", handleWheel as EventListener);
         renderer.dispose();
       }
+      threeNodesRef.current.forEach((mesh) => safelyDisposeObject(mesh));
+      cablesRef.current.forEach((line) => safelyDisposeObject(line));
+      cablePulsesRef.current.forEach((pulse) => safelyDisposeObject(pulse.mesh));
+      if (gridHelper) {
+        gridHelper.geometry.dispose();
+        if (Array.isArray(gridHelper.material)) {
+          gridHelper.material.forEach((m) => m.dispose());
+        } else {
+          gridHelper.material.dispose();
+        }
+      }
+      if (floor) {
+        floor.geometry.dispose();
+        if (Array.isArray(floor.material)) {
+          floor.material.forEach((m) => m.dispose());
+        } else {
+          floor.material.dispose();
+        }
+      }
       cameraRef.current = null;
       controlsRef.current = null;
     };
@@ -2638,15 +2713,24 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
     const scene = sceneRef.current;
     if (!scene) return;
 
-    threeNodesRef.current.forEach((mesh) => scene.remove(mesh));
+    threeNodesRef.current.forEach((mesh) => {
+      safelyDisposeObject(mesh);
+      scene.remove(mesh);
+    });
     threeNodesRef.current.clear();
     ledObjectsRef.current.clear();
     doorPivotsRef.current.clear();
 
-    cablesRef.current.forEach((line) => scene.remove(line));
+    cablesRef.current.forEach((line) => {
+      safelyDisposeObject(line);
+      scene.remove(line);
+    });
     cablesRef.current.splice(0);
 
-    cablePulsesRef.current.forEach((pulse) => scene.remove(pulse.mesh));
+    cablePulsesRef.current.forEach((pulse) => {
+      safelyDisposeObject(pulse.mesh);
+      scene.remove(pulse.mesh);
+    });
     cablePulsesRef.current = [];
 
     const computedPositions = new Map<string, THREE.Vector3>();
@@ -2725,8 +2809,10 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
 
       if (node.data.customModelUrl && customModelRegistry.has(node.data.customModelUrl)) {
         const cloned = customModelRegistry.get(node.data.customModelUrl)!.clone();
+        cloned.userData = { ...cloned.userData, isCustomModel: true };
         deviceGroup = new THREE.Group();
         deviceGroup.add(cloned);
+        deviceGroup.userData.isCustomModel = true;
       } else if (node.data.customModelUrl) {
         const modelUrl = node.data.customModelUrl;
         if (!loadingUrlsRef.current.has(modelUrl)) {

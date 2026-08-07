@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Network, Activity, ShieldCheck, ArrowUpRight, Share2, Radio, Server, HardDrive, Cpu } from "lucide-react";
+import { Network, Activity, ShieldCheck, ArrowUpRight, Share2, Radio, Server, HardDrive, Cpu, Zap } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useDiagram } from "@/lib/store";
 import { useMemo } from "react";

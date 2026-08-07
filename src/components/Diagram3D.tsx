@@ -895,23 +895,23 @@ function createProceduralEci() {
   const group = new THREE.Group();
 
   // Chassis dimensions — 2U rack-mount, wide-chassis style
-  const width  = 5.8;
-  const depth  = 2.6;
+  const width = 5.8;
+  const depth = 2.6;
   const height = 0.9; // 2U
-  const faceZ  = depth / 2;
+  const faceZ = depth / 2;
 
   // ─── Materials ────────────────────────────────────────────────────────────
-  const bodyMat   = new THREE.MeshStandardMaterial({ color: 0x1b2a45, metalness: 0.45, roughness: 0.40 });
-  const faceAccent= new THREE.MeshStandardMaterial({ color: 0x1e3060, metalness: 0.35, roughness: 0.30 });
-  const earMat    = new THREE.MeshStandardMaterial({ color: 0x1a2840, metalness: 0.50, roughness: 0.35 });
-  const blackMat  = new THREE.MeshStandardMaterial({ color: 0x080e1f, metalness: 0.15, roughness: 0.55 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1b2a45, metalness: 0.45, roughness: 0.40 });
+  const faceAccent = new THREE.MeshStandardMaterial({ color: 0x1e3060, metalness: 0.35, roughness: 0.30 });
+  const earMat = new THREE.MeshStandardMaterial({ color: 0x1a2840, metalness: 0.50, roughness: 0.35 });
+  const blackMat = new THREE.MeshStandardMaterial({ color: 0x080e1f, metalness: 0.15, roughness: 0.55 });
   const silverMat = new THREE.MeshStandardMaterial({ color: 0xa0b0c8, metalness: 0.65, roughness: 0.22 });
-  const rj45Mat   = new THREE.MeshStandardMaterial({ color: 0x0a1830, metalness: 0.2,  roughness: 0.6  });
+  const rj45Mat = new THREE.MeshStandardMaterial({ color: 0x0a1830, metalness: 0.2, roughness: 0.6 });
   const lcBlueMat = new THREE.MeshStandardMaterial({ color: 0x1a5fd0, metalness: 0.10, roughness: 0.30 });
-  const lcDimMat  = new THREE.MeshStandardMaterial({ color: 0x0e1e40, metalness: 0.10, roughness: 0.50 });
-  const eci9603Mat= new THREE.MeshStandardMaterial({ color: 0x7ec8ff, metalness: 0,    roughness: 0.9  });
-  const greenLed  = new THREE.MeshBasicMaterial({ color: 0x22c55e });
-  const dimLed    = new THREE.MeshBasicMaterial({ color: 0x1a2a1a });
+  const lcDimMat = new THREE.MeshStandardMaterial({ color: 0x0e1e40, metalness: 0.10, roughness: 0.50 });
+  const eci9603Mat = new THREE.MeshStandardMaterial({ color: 0x7ec8ff, metalness: 0, roughness: 0.9 });
+  const greenLed = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+  const dimLed = new THREE.MeshBasicMaterial({ color: 0x1a2a1a });
   const leds: THREE.Mesh[] = [];
 
   // ─── Main chassis body ───────────────────────────────────────────────────
@@ -949,9 +949,9 @@ function createProceduralEci() {
   }
 
   // ─── LEFT MODULE — Management card (SFP+ ports + RJ45) ──────────────────
-  const mgmtX    = -width / 2 + 0.9;   // center of left module
-  const mgmtW    = 1.5;
-  const mgmtH    = height * 0.78;
+  const mgmtX = -width / 2 + 0.9;   // center of left module
+  const mgmtW = 1.5;
+  const mgmtH = height * 0.78;
 
   const mgmtCard = new THREE.Mesh(new THREE.BoxGeometry(mgmtW, mgmtH, 0.05), faceAccent);
   mgmtCard.position.set(mgmtX, 0, faceZ + 0.04);
@@ -986,18 +986,18 @@ function createProceduralEci() {
 
   // ─── Module divider groove ───────────────────────────────────────────────
   const dividerX = mgmtX + mgmtW / 2 + 0.06;
-  const divider  = new THREE.Mesh(new THREE.BoxGeometry(0.06, height * 0.90, 0.04), blackMat);
+  const divider = new THREE.Mesh(new THREE.BoxGeometry(0.06, height * 0.90, 0.04), blackMat);
   divider.position.set(dividerX, 0, faceZ + 0.04);
   group.add(divider);
 
   // ─── RIGHT SIDE — Two optical line modules ───────────────────────────────
   // Each module occupies roughly half the remaining width
   const optModuleStartX = dividerX + 0.08;
-  const optModuleW      = (width / 2 - 0.55 - (optModuleStartX - 0)) / 2 + 0.0;
+  const optModuleW = (width / 2 - 0.55 - (optModuleStartX - 0)) / 2 + 0.0;
   const lcCols = 8;
   const lcRows = 2;
-  const lcW    = 0.11;
-  const lcH    = 0.085;
+  const lcW = 0.11;
+  const lcH = 0.085;
   const lcGapX = 0.115;
   const lcGapY = 0.115;
 
@@ -1019,7 +1019,7 @@ function createProceduralEci() {
     for (let row = 0; row < lcRows; row++) {
       for (let col = 0; col < lcCols; col++) {
         const portIdx = mod * (lcCols * lcRows) + row * lcCols + col;
-        const active  = portIdx < 8; // first 8 ports active by default
+        const active = portIdx < 8; // first 8 ports active by default
         const connMat = active ? lcBlueMat : lcDimMat;
         const conn = new THREE.Mesh(new THREE.BoxGeometry(lcW, lcH, 0.09), connMat);
         conn.position.set(

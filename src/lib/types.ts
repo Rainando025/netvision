@@ -3,7 +3,7 @@ export type CameraType = "Dome" | "Bullet" | "PTZ" | "Fisheye" | "Box";
 
 export type DeviceStatus = "online" | "offline" | "warning";
 
-export type NodeDataKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier" | "eci";
+export type NodeDataKind = "switch" | "camera" | "rack" | "wall" | "door" | "lamp" | "ceiling" | "floor" | "olt" | "dio" | "router" | "server" | "battery_rack" | "stationary_battery" | "inverter" | "solar" | "patchpanel" | "dwdm" | "rectifier" | "eci";
 
 export interface ThreeDAttributes {
   position3d?: { x: number; y: number; z: number };
@@ -65,6 +65,12 @@ export interface LampNodeData extends Record<string, unknown>, ThreeDAttributes 
 export interface CeilingNodeData extends Record<string, unknown>, ThreeDAttributes {
   kind: "ceiling";
   name: string;
+}
+
+export interface FloorNodeData extends Record<string, unknown>, ThreeDAttributes {
+  kind: "floor";
+  name: string;
+  width?: number;
 }
 
 export interface OltNodeData extends Record<string, unknown>, ThreeDAttributes {
@@ -157,6 +163,7 @@ export type NodeData =
   | DoorNodeData
   | LampNodeData
   | CeilingNodeData
+  | FloorNodeData
   | OltNodeData
   | DioNodeData
   | RouterNodeData

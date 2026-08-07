@@ -2101,15 +2101,15 @@ const safelyDisposeObject = (obj: THREE.Object3D) => {
         mesh.geometry.dispose();
       }
       if (mesh.material) {
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach((mat) => {
-            if (mat.map) mat.map.dispose();
-            mat.dispose();
-          });
-        } else {
-          if (mesh.material.map) mesh.material.map.dispose();
-          mesh.material.dispose();
-        }
+        const mats: THREE.Material[] = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((mat) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const anyMat = mat as any;
+          if (anyMat.map) anyMat.map.dispose();
+          if (anyMat.lightMap) anyMat.lightMap.dispose();
+          if (anyMat.emissiveMap) anyMat.emissiveMap.dispose();
+          mat.dispose();
+        });
       }
     }
   });

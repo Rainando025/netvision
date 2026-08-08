@@ -129,7 +129,7 @@ function DiagramPage() {
           sourceMap.set(e.source, { sourceNode, targetNodes: [], labels: [] });
         }
         sourceMap.get(e.source)!.targetNodes.push(targetNode);
-        sourceMap.get(e.source)!.labels.push(e.data?.label || '-');
+        sourceMap.get(e.source)!.labels.push(e.data?.label ? String(e.data.label) : '-');
       });
 
       const linksHtml = Array.from(sourceMap.values()).map(item => {

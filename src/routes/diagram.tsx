@@ -84,16 +84,21 @@ function DiagramPage() {
       await new Promise(r => setTimeout(r, 600));
     }
 
-    const element = document.querySelector('.react-flow__viewport') as HTMLElement || document.querySelector('.react-flow') as HTMLElement;
-    if (!element) {
-      toast.error('Diagrama 2D não encontrado para exportação');
-      if (wasIn3D) setViewMode("3d");
-      return;
-    }
-
     try {
-      // Captura o diagrama 2D
-      const dataUrl = await toPng(element, { backgroundColor: theme === 'light' ? '#ffffff' : '#0a0f19' });
+      // Capture the whole react-flow wrapper so edges (cables) are included
+      const rfWrapper = document.querySelector('.react-flow') as HTMLElement;
+      const element = rfWrapper || document.querySelector('.react-flow__viewport') as HTMLElement;
+      if (!element) {
+        toast.error('Diagrama 2D não encontrado para exportação');
+        if (wasIn3D) setViewMode("3d");
+        return;
+      }
+
+      // Captura o diagrama 2D com maior resolução
+      const dataUrl = await toPng(element, {
+        backgroundColor: theme === 'light' ? '#ffffff' : '#0a0f19',
+        pixelRatio: 2,
+      });
       
       const w = window.open('', '_blank');
       if (!w) { toast.error('Não foi possível abrir nova aba para o PDF'); return; }
@@ -118,33 +123,50 @@ function DiagramPage() {
         </tr>`;
       }).join('');
 
-      // Group connections by source equipment to show clear power distribution
+      // Determine origin and destination dynamically based on electrical power hierarchy
+      const getPowerRank = (kind: string): number => {
+        if (["solar", "stationary_battery", "battery_rack"].includes(kind)) return 1;
+        if (["rectifier", "inverter"].includes(kind)) return 2;
+        return 3; // Consumers
+      };
+
       const sourceMap = new Map<string, { sourceNode: any, targetNodes: any[], labels: string[] }>();
+      
       edges.forEach(e => {
-        const sourceNode = nodes.find(n => n.id === e.source);
-        const targetNode = nodes.find(n => n.id === e.target);
-        if (!sourceNode || !targetNode) return;
-        
-        if (!sourceMap.has(e.source)) {
-          sourceMap.set(e.source, { sourceNode, targetNodes: [], labels: [] });
+        const nodeA = nodes.find(n => n.id === e.source);
+        const nodeB = nodes.find(n => n.id === e.target);
+        if (!nodeA || !nodeB) return;
+
+        const rankA = getPowerRank(nodeA.data.kind);
+        const rankB = getPowerRank(nodeB.data.kind);
+
+        let originNode = nodeA;
+        let destNode = nodeB;
+
+        // If Node B has higher rank (closer to power source) than Node A, reverse the direction
+        if (rankB < rankA) {
+          originNode = nodeB;
+          destNode = nodeA;
         }
-        sourceMap.get(e.source)!.targetNodes.push(targetNode);
-        sourceMap.get(e.source)!.labels.push(e.data?.label ? String(e.data.label) : '-');
+
+        const originId = originNode.id;
+        if (!sourceMap.has(originId)) {
+          sourceMap.set(originId, { sourceNode: originNode, targetNodes: [], labels: [] });
+        }
+        sourceMap.get(originId)!.targetNodes.push(destNode);
+        sourceMap.get(originId)!.labels.push(e.data?.label ? String(e.data.label) : '-');
       });
 
       const linksHtml = Array.from(sourceMap.values()).map(item => {
         const srcName = item.sourceNode.data.name || item.sourceNode.id;
-        const srcKind = item.sourceNode.data.kind;
         
         const targetsHtml = item.targetNodes.map((tNode, idx) => {
           const tName = tNode.data.name || tNode.id;
-          const tKind = tNode.data.kind;
           const label = item.labels[idx];
           const labelPart = label && label !== '-' ? `<span style="font-size: 11px; color: var(--text-muted); font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">ID: ${label}</span>` : '';
           return `<div style="padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px;">
             <span style="color: #a16207;">⚡ Energia</span>
             <span>&rarr; Alimentando: <strong>${tName}</strong></span>
-            <span class="badge" style="font-size: 10px; padding: 2px 8px; background: #f1f5f9; color: #475569;">${tKind}</span>
             ${labelPart}
           </div>`;
         }).join('');
@@ -152,7 +174,6 @@ function DiagramPage() {
         return `<tr>
           <td>
             <strong>${srcName}</strong> 
-            <span class="badge power" style="font-size: 10px; padding: 2px 8px; margin-left: 6px;">${srcKind}</span>
           </td>
           <td colspan="3" style="padding: 4px 16px;">
             <div style="display: flex; flex-direction: column;">
@@ -402,9 +423,9 @@ function DiagramPage() {
       </div>
     </div>
 
-    <div class="section-title">Diagrama 2D</div>
-    <div class="diagram-container">
-      <img src="${dataUrl}" alt="Diagrama 2D" />
+    <div class="section-title">Diagrama 2D — Topologia Elétrica</div>
+    <div style="border: 1px solid var(--border); border-radius: 8px; padding: 4px; background: #0a0f19; margin-bottom: 32px; overflow: hidden; page-break-inside: avoid; page-break-after: always;">
+      <img src="${dataUrl}" alt="Diagrama 2D" style="width: 100%; height: auto; min-height: 500px; border-radius: 4px; display: block; object-fit: contain;" />
     </div>
 
     <div class="section-title">Inventário de Equipamentos</div>

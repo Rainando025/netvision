@@ -8,13 +8,14 @@ import {
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
-  useReactFlow,
+  type ReactFlowInstance,
   type Connection,
   type EdgeChange,
   type NodeChange,
   type Node,
+  type Edge,
 } from "@xyflow/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { AppShell, useTheme } from "@/components/AppShell";
 import { SwitchNode } from "@/components/nodes/SwitchNode";
 import { CameraNode } from "@/components/nodes/CameraNode";
@@ -74,9 +75,22 @@ function DiagramPage() {
   const createLocation = useDiagram((s) => s.createLocation);
   const deleteLocation = useDiagram((s) => s.deleteLocation);
   const selectLocation = useDiagram((s) => s.selectLocation);
-  const rfInstance = useReactFlow();
+  // useRef to store the ReactFlow instance captured via onInit
+  const rfApi = useRef<ReactFlowInstance<Node<NodeData>, Edge> | null>(null);
 
   const handleExportPDF = async () => {
+    // CRITICAL: Open popup IMMEDIATELY on user click, before any await.
+    // Browsers block window.open() called after async operations.
+    const w = window.open('', '_blank');
+    if (!w) {
+      toast.error('Popup bloqueado pelo navegador. Permita popups para este site.');
+      return;
+    }
+
+    // Show loading state in the new window immediately
+    w.document.write(`<!DOCTYPE html><html><body style="background:#0a0f19;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center"><div style="font-size:24px;margin-bottom:12px">⏳ Gerando relatório...</div><div style="font-size:14px;opacity:0.6">Capturando diagrama 2D</div></div></body></html>`);
+    w.document.close();
+
     let wasIn3D = false;
     if (viewMode === "3d") {
       wasIn3D = true;
@@ -87,16 +101,16 @@ function DiagramPage() {
     // Switch to 2D and fit all nodes into view so edges are visible
     setViewMode("2d");
     await new Promise(r => setTimeout(r, 400));
-    rfInstance.fitView({ padding: 0.08, duration: 0 });
+    rfApi.current?.fitView({ padding: 0.08, duration: 0 });
     await new Promise(r => setTimeout(r, 500));
 
     try {
       // Capture the whole react-flow element including SVG edges
-      // Temporarily hide minimap and controls for a clean capture
       const rfEl = document.querySelector('.react-flow') as HTMLElement;
       if (!rfEl) {
         toast.error('Diagrama 2D não encontrado para exportação');
         if (wasIn3D) setViewMode("3d");
+        w.close();
         return;
       }
 
@@ -114,7 +128,6 @@ function DiagramPage() {
         const htmlEl = el as HTMLElement;
         const computed = window.getComputedStyle(htmlEl);
         savedStyles.push({ el: htmlEl, style: htmlEl.getAttribute('style') || '' });
-        // Apply critical visual properties inline
         const stroke = computed.stroke;
         const strokeWidth = computed.strokeWidth;
         const fill = computed.fill;
@@ -131,7 +144,7 @@ function DiagramPage() {
         backgroundColor: '#0a0f19',
         scale: 2,
         ignoreElements: (node) => {
-          return node.classList?.contains('react-flow__minimap') || 
+          return node.classList?.contains('react-flow__minimap') ||
                  node.classList?.contains('react-flow__controls') ||
                  node.classList?.contains('react-flow__panel');
         },
@@ -151,9 +164,7 @@ function DiagramPage() {
       if (minimap) minimap.style.display = '';
       if (controls) controls.style.display = '';
 
-      
-      const w = window.open('', '_blank');
-      if (!w) { toast.error('Não foi possível abrir nova aba para o PDF'); return; }
+
 
       const dataStr = new Date().toLocaleString('pt-BR');
       const popName = "Diagrama de Rede";
@@ -981,6 +992,7 @@ function DiagramPage() {
                       edgeTypes={edgeTypes}
                       deleteKeyCode="Delete"
                       fitView
+                      onInit={(instance) => { rfApi.current = instance; }}
                       colorMode={theme}
                       defaultEdgeOptions={{ animated: true, className: "animated", type: "deletable" }}
                       proOptions={{ hideAttribution: true }}

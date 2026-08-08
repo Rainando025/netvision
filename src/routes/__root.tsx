@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "POP GRID · NOC de Infraestrutura" },
+      { title: "PopGrid - Network Diagram System" },
       { name: "description", content: "Diagrama de rede, NOC e monitoramento de ping para infraestrutura ISP e Telecom." },
       { name: "author", content: "POP GRID" },
       { property: "og:type", content: "website" },

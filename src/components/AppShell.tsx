@@ -66,14 +66,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen">
       <aside className="hidden md:flex w-64 flex-col border-r border-border/60 glass">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-6">
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <img src="https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_logo_transparente.png" alt="POP GRID Logo" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <div className="font-display font-semibold tracking-tight text-lg leading-none">POP GRID</div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mt-1">Network diagram system</div>
-          </div>
+        <div className="py-3 flex items-center justify-center" style={{ minHeight: '140px' }}>
+          <img src="https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_logo_transparente.png" alt="POP GRID Logo" className="w-full h-full object-contain" style={{ maxHeight: '140px' }} />
         </div>
 
         <nav className="flex-1 px-3 py-2 space-y-1">
@@ -89,10 +83,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <div
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm ${active
-                      ? "text-foreground"
-                      : isAdminLink
-                        ? "text-primary/70 hover:text-primary hover:bg-primary/10"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                    ? "text-foreground"
+                    : isAdminLink
+                      ? "text-primary/70 hover:text-primary hover:bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                     }`}
                 >
                   {active && (
@@ -132,8 +126,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             onClick={toggle}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold border transition-all duration-300 ${isLight
-                ? "bg-amber-50 text-amber-600 border-amber-200/80 hover:bg-amber-100"
-                : "bg-secondary/40 text-cyan-400 border-border/40 hover:bg-secondary/70"
+              ? "bg-amber-50 text-amber-600 border-amber-200/80 hover:bg-amber-100"
+              : "bg-secondary/40 text-cyan-400 border-border/40 hover:bg-secondary/70"
               }`}
             title={isLight ? "Mudar para tema escuro" : "Mudar para tema claro"}
           >
@@ -184,9 +178,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="flex-1 min-w-0">
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border/60 glass">
-          <div className="flex items-center gap-2">
-            <img src="https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_logo_transparente.png" alt="Logo" className="w-6 h-6 object-contain" />
-            <span className="font-display font-semibold">POP GRID</span>
+          <div className="flex items-center">
+            <img src="https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_logo_transparente.png" alt="POP GRID Logo" className="h-7 w-auto object-contain" />
           </div>
           <nav className="flex gap-1">
             {allNav.map((item) => {

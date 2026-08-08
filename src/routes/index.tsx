@@ -9,9 +9,9 @@ import type { NodeData } from "@/lib/types";
 export const Route = createFileRoute("/")(({
   head: () => ({
     meta: [
-      { title: "POP GRID · NOC de Infraestrutura Telecom" },
+      { title: "PopGrid - Network Diagram System" },
       { name: "description", content: "Painel de operações para sua malha de equipamentos ISP: diagrama, topologia 3D e gerenciamento de infraestrutura Telecom em tempo real." },
-      { property: "og:title", content: "POP GRID · NOC de Infraestrutura Telecom" },
+      { property: "og:title", content: "PopGrid - Network Diagram System" },
       { property: "og:description", content: "Painel e diagrama para infraestrutura de Telecom e ISP." },
     ],
   }),

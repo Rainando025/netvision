@@ -237,8 +237,8 @@ export function AiAssistantDrawer({ isOpen, onClose }: AiAssistantDrawerProps) {
                 <button
                   onClick={() => setShowKeyConfig((prev) => !prev)}
                   className={`p-2 rounded-lg transition-colors cursor-pointer ${showKeyConfig || userApiKey
-                      ? "text-primary bg-primary/10 border border-primary/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                    ? "text-primary bg-primary/10 border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                     }`}
                   title="Configurar Chave da API Gemini"
                 >
@@ -433,8 +433,8 @@ function Message({ message }: { message: UIMessage }) {
     >
       <div
         className={`grid place-items-center w-7.5 h-7.5 rounded-lg border shrink-0 ${isUser
-            ? "bg-accent/15 text-accent border-accent/30"
-            : "bg-primary/15 text-primary border-primary/30"
+          ? "bg-accent/15 text-accent border-accent/30"
+          : "bg-primary/15 text-primary border-primary/30"
           }`}
       >
         {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}

@@ -67,12 +67,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex w-64 flex-col border-r border-border/60 glass">
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-6">
-          <div className="relative grid place-items-center w-10 h-10 rounded-xl glow-cyan bg-card">
-            <Radio className="w-5 h-5 text-primary" />
+          <div className="relative w-12 h-12 flex items-center justify-center">
+            <img src="https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_logo_transparente.png" alt="POP GRID Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <div className="font-display font-semibold tracking-tight text-lg leading-none">NetVision</div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mt-1">Telecom NOC</div>
+            <div className="font-display font-semibold tracking-tight text-lg leading-none">POP GRID</div>
+            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mt-1">Network diagram system</div>
           </div>
         </div>
 
@@ -185,8 +185,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="flex-1 min-w-0">
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border/60 glass">
           <div className="flex items-center gap-2">
-            <Radio className="w-5 h-5 text-primary" />
-            <span className="font-display font-semibold">NetVision</span>
+            <img src="https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_logo_transparente.png" alt="Logo" className="w-6 h-6 object-contain" />
+            <span className="font-display font-semibold">POP GRID</span>
           </div>
           <nav className="flex gap-1">
             {allNav.map((item) => {
@@ -234,7 +234,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           dragMomentum={false}
           onClick={() => setIsAiOpen(true)}
           className="pointer-events-auto absolute bottom-6 right-6 w-11 h-11 rounded-full bg-primary text-primary-foreground hover:glow-cyan flex items-center justify-center transition shadow-lg cursor-grab active:cursor-grabbing group"
-          title="Perguntar para o NetVision Copilot (Arraste para mover)"
+          title="Perguntar para o POP GRID Copilot (Arraste para mover)"
           aria-label="Pedir ajuda para IA"
         >
           <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />

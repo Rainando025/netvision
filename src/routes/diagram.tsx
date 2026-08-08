@@ -51,7 +51,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/diagram")({
   head: () => ({
     meta: [
-      { title: "Diagrama de Rede · NetVision" },
+      { title: "Diagrama de Rede · POP GRID" },
       { name: "description", content: "Monte seu diagrama de switches e câmeras IP, conecte dispositivos e acompanhe o ping em tempo real." },
     ],
   }),

@@ -57,7 +57,7 @@ function LoginPage() {
             <Cctv className="w-7 h-7 text-primary" />
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-success status-dot text-success" />
           </div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">NetVision</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">POP GRID</h1>
           <p className="text-sm text-muted-foreground mt-1">CCTV NOC & Network Dashboard</p>
         </div>
 

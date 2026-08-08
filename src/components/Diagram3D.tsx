@@ -4117,7 +4117,7 @@ export function Diagram3D({ onBack, isFullscreen, toggleFullscreen }: { onBack: 
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                            {edge.data?.label && <span className="text-[10px] text-muted-foreground truncate">{edge.data.label as string}</span>}
+                            {edge.data?.label != null && <span className="text-[10px] text-muted-foreground truncate">{String(edge.data.label)}</span>}
                           </div>
                         );
                       })}

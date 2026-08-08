@@ -170,7 +170,7 @@ function AdminPage() {
               Controle de Contas
             </h1>
             <p className="text-muted-foreground max-w-xl text-sm">
-              Gerencie, aprove ou recuse solicitações de acesso ao NetVision NOC.
+              Gerencie, aprove ou recuse solicitações de acesso ao POP GRID NOC.
             </p>
           </div>
 

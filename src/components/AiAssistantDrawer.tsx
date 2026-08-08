@@ -226,7 +226,7 @@ export function AiAssistantDrawer({ isOpen, onClose }: AiAssistantDrawerProps) {
                 <Bot className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-display font-semibold text-sm leading-tight truncate">NetVision Copilot</div>
+                <div className="font-display font-semibold text-sm leading-tight truncate">POP GRID Copilot</div>
                 <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-success status-dot text-success" />
                   <span className="truncate">{ctxBadge}</span>

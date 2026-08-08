@@ -9,9 +9,9 @@ import type { NodeData } from "@/lib/types";
 export const Route = createFileRoute("/")(({
   head: () => ({
     meta: [
-      { title: "NetVision · NOC de Infraestrutura Telecom" },
+      { title: "POP GRID · NOC de Infraestrutura Telecom" },
       { name: "description", content: "Painel de operações para sua malha de equipamentos ISP: diagrama, topologia 3D e gerenciamento de infraestrutura Telecom em tempo real." },
-      { property: "og:title", content: "NetVision · NOC de Infraestrutura Telecom" },
+      { property: "og:title", content: "POP GRID · NOC de Infraestrutura Telecom" },
       { property: "og:description", content: "Painel e diagrama para infraestrutura de Telecom e ISP." },
     ],
   }),
@@ -56,14 +56,14 @@ function Dashboard() {
               className="text-[11px] uppercase tracking-[0.24em] text-primary flex items-center gap-2"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary status-dot text-primary" />
-              Centro de operações Telecom
+              OPERACIONAL
             </motion.div>
             <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="font-display text-4xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight mt-2">
-              Sua infraestrutura ISP,<br />
+              Sua infraestrutura<br />
               <span className="text-primary">em uma única tela.</span>
             </motion.h1>
             <p className="text-muted-foreground mt-3 max-w-xl">
-              Construa a topologia 3D, conecte OLTs, Racks, Switches, DIOs e monitore toda a sua infraestrutura de provedor em tempo real.
+              Construa a topologia 3D de toda a elétrica do seu ponto de presença
             </p>
           </div>
 

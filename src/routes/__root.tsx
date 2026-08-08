@@ -82,13 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NetVision · NOC de Infraestrutura" },
+      { title: "POP GRID · NOC de Infraestrutura" },
       { name: "description", content: "Diagrama de rede, NOC e monitoramento de ping para infraestrutura ISP e Telecom." },
-      { name: "author", content: "NetVision" },
+      { name: "author", content: "POP GRID" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
     links: [
+      { rel: "icon", href: "https://raw.githubusercontent.com/Rainando025/ASSETS-FOTOS/refs/heads/main/popgrid_icone.ico" },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },

@@ -8,6 +8,7 @@ import {
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
+  useReactFlow,
   type Connection,
   type EdgeChange,
   type NodeChange,
@@ -45,7 +46,7 @@ import {
   FileText
 } from "lucide-react";
 import { DeletableEdge } from "@/components/DeletableEdge";
-import { toPng } from "html-to-image";
+import html2canvas from "html2canvas";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/diagram")({
@@ -73,6 +74,7 @@ function DiagramPage() {
   const createLocation = useDiagram((s) => s.createLocation);
   const deleteLocation = useDiagram((s) => s.deleteLocation);
   const selectLocation = useDiagram((s) => s.selectLocation);
+  const rfInstance = useReactFlow();
 
   const handleExportPDF = async () => {
     let wasIn3D = false;
@@ -80,25 +82,75 @@ function DiagramPage() {
       wasIn3D = true;
       setViewMode("2d");
       setIsFullscreen(false);
-      // Aguardar a renderização do React Flow
-      await new Promise(r => setTimeout(r, 600));
     }
 
+    // Switch to 2D and fit all nodes into view so edges are visible
+    setViewMode("2d");
+    await new Promise(r => setTimeout(r, 400));
+    rfInstance.fitView({ padding: 0.08, duration: 0 });
+    await new Promise(r => setTimeout(r, 500));
+
     try {
-      // Capture the whole react-flow wrapper so edges (cables) are included
-      const rfWrapper = document.querySelector('.react-flow') as HTMLElement;
-      const element = rfWrapper || document.querySelector('.react-flow__viewport') as HTMLElement;
-      if (!element) {
+      // Capture the whole react-flow element including SVG edges
+      // Temporarily hide minimap and controls for a clean capture
+      const rfEl = document.querySelector('.react-flow') as HTMLElement;
+      if (!rfEl) {
         toast.error('Diagrama 2D não encontrado para exportação');
         if (wasIn3D) setViewMode("3d");
         return;
       }
 
-      // Captura o diagrama 2D com maior resolução
-      const dataUrl = await toPng(element, {
-        backgroundColor: theme === 'light' ? '#ffffff' : '#0a0f19',
-        pixelRatio: 2,
+      // Esconde os controles
+      const minimap = rfEl.querySelector('.react-flow__minimap') as HTMLElement | null;
+      const controls = rfEl.querySelector('.react-flow__controls') as HTMLElement | null;
+      if (minimap) minimap.style.display = 'none';
+      if (controls) controls.style.display = 'none';
+
+      // html2canvas cannot read external CSS for SVG elements.
+      // Inline computed styles for all SVG elements so edges/cables render correctly.
+      const svgEls = rfEl.querySelectorAll('svg *');
+      const savedStyles: { el: Element; style: string }[] = [];
+      svgEls.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        const computed = window.getComputedStyle(htmlEl);
+        savedStyles.push({ el: htmlEl, style: htmlEl.getAttribute('style') || '' });
+        // Apply critical visual properties inline
+        const stroke = computed.stroke;
+        const strokeWidth = computed.strokeWidth;
+        const fill = computed.fill;
+        const strokeDasharray = computed.strokeDasharray;
+        const opacity = computed.opacity;
+        if (stroke && stroke !== 'none') htmlEl.style.stroke = stroke;
+        if (strokeWidth) htmlEl.style.strokeWidth = strokeWidth;
+        if (fill) htmlEl.style.fill = fill;
+        if (strokeDasharray && strokeDasharray !== 'none') htmlEl.style.strokeDasharray = strokeDasharray;
+        if (opacity) htmlEl.style.opacity = opacity;
       });
+
+      const canvas = await html2canvas(rfEl, {
+        backgroundColor: '#0a0f19',
+        scale: 2,
+        ignoreElements: (node) => {
+          return node.classList?.contains('react-flow__minimap') || 
+                 node.classList?.contains('react-flow__controls') ||
+                 node.classList?.contains('react-flow__panel');
+        },
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+
+      const dataUrl = canvas.toDataURL('image/png');
+
+      // Restaura estilos originais dos SVGs
+      savedStyles.forEach(({ el, style }) => {
+        (el as HTMLElement).setAttribute('style', style);
+      });
+
+      // Restaura os controles
+      if (minimap) minimap.style.display = '';
+      if (controls) controls.style.display = '';
+
       
       const w = window.open('', '_blank');
       if (!w) { toast.error('Não foi possível abrir nova aba para o PDF'); return; }
@@ -201,6 +253,11 @@ function DiagramPage() {
 
     * { box-sizing: border-box; }
     
+    @page { 
+      size: landscape; 
+      margin: 10mm; 
+    }
+
     body { 
       font-family: 'Inter', sans-serif; 
       color: var(--text);
@@ -423,9 +480,9 @@ function DiagramPage() {
       </div>
     </div>
 
-    <div class="section-title">Diagrama 2D — Topologia Elétrica</div>
-    <div style="border: 1px solid var(--border); border-radius: 8px; padding: 4px; background: #0a0f19; margin-bottom: 32px; overflow: hidden; page-break-inside: avoid; page-break-after: always;">
-      <img src="${dataUrl}" alt="Diagrama 2D" style="width: 100%; height: auto; min-height: 500px; border-radius: 4px; display: block; object-fit: contain;" />
+    <div class="section-title" style="margin-top: 0;">Diagrama 2D — Topologia Elétrica</div>
+    <div style="border-radius: 8px; overflow: hidden; page-break-inside: avoid; page-break-after: always; margin-bottom: 32px;">
+      <img src="${dataUrl}" alt="Diagrama 2D" style="width: 100%; height: auto; display: block;" />
     </div>
 
     <div class="section-title">Inventário de Equipamentos</div>

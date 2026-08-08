@@ -118,19 +118,48 @@ function DiagramPage() {
         </tr>`;
       }).join('');
 
-      const linksHtml = edges.map(e => {
-         const src = nodes.find(n => n.id === e.source)?.data.name || e.source;
-         const tgt = nodes.find(n => n.id === e.target)?.data.name || e.target;
-         const typeBadge = e.data?.isPower 
-           ? '<span class="badge power">⚡ Energia</span>' 
-           : '<span class="badge">📡 Dados</span>';
-         const label = e.data?.label || '-';
-         return `<tr>
-           <td><strong>${src}</strong></td>
-           <td><strong>${tgt}</strong></td>
-           <td>${typeBadge}</td>
-           <td>${label}</td>
-         </tr>`;
+      // Group connections by source equipment to show clear power distribution
+      const sourceMap = new Map<string, { sourceNode: any, targetNodes: any[], labels: string[] }>();
+      edges.forEach(e => {
+        const sourceNode = nodes.find(n => n.id === e.source);
+        const targetNode = nodes.find(n => n.id === e.target);
+        if (!sourceNode || !targetNode) return;
+        
+        if (!sourceMap.has(e.source)) {
+          sourceMap.set(e.source, { sourceNode, targetNodes: [], labels: [] });
+        }
+        sourceMap.get(e.source)!.targetNodes.push(targetNode);
+        sourceMap.get(e.source)!.labels.push(e.data?.label || '-');
+      });
+
+      const linksHtml = Array.from(sourceMap.values()).map(item => {
+        const srcName = item.sourceNode.data.name || item.sourceNode.id;
+        const srcKind = item.sourceNode.data.kind;
+        
+        const targetsHtml = item.targetNodes.map((tNode, idx) => {
+          const tName = tNode.data.name || tNode.id;
+          const tKind = tNode.data.kind;
+          const label = item.labels[idx];
+          const labelPart = label && label !== '-' ? `<span style="font-size: 11px; color: var(--text-muted); font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">ID: ${label}</span>` : '';
+          return `<div style="padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #a16207;">⚡ Energia</span>
+            <span>&rarr; Alimentando: <strong>${tName}</strong></span>
+            <span class="badge" style="font-size: 10px; padding: 2px 8px; background: #f1f5f9; color: #475569;">${tKind}</span>
+            ${labelPart}
+          </div>`;
+        }).join('');
+        
+        return `<tr>
+          <td>
+            <strong>${srcName}</strong> 
+            <span class="badge power" style="font-size: 10px; padding: 2px 8px; margin-left: 6px;">${srcKind}</span>
+          </td>
+          <td colspan="3" style="padding: 4px 16px;">
+            <div style="display: flex; flex-direction: column;">
+              ${targetsHtml}
+            </div>
+          </td>
+        </tr>`;
       }).join('');
 
       w.document.write(`<!DOCTYPE html>
@@ -394,18 +423,16 @@ function DiagramPage() {
       </tbody>
     </table>
 
-    <div class="section-title">Mapa de Conexões</div>
+    <div class="section-title">Mapa de Conexões (Distribuição de Energia)</div>
     <table>
       <thead>
         <tr>
-          <th>Origem</th>
-          <th>Destino</th>
-          <th>Tipo de Link</th>
-          <th>Identificação (Label)</th>
+          <th>Equipamento Origem</th>
+          <th colspan="3">Distribuição / Cargas Alimentadas</th>
         </tr>
       </thead>
       <tbody>
-        ${linksHtml || '<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">Nenhuma ligação cadastrada.</td></tr>'}
+        ${linksHtml || '<tr><td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">Nenhuma ligação de energia cadastrada.</td></tr>'}
       </tbody>
     </table>
   </div>
@@ -480,10 +507,8 @@ function DiagramPage() {
       const source = nodes.find((n) => n.id === c.source);
       const cam = (target?.data as NodeData).kind === "camera" ? target : (source?.data as NodeData).kind === "camera" ? source : null;
       const offline = cam && (cam.data as { status?: string }).status === "offline";
-      const isPower = ["stationary_battery", "battery_rack", "inverter", "solar"].includes((source?.data as NodeData)?.kind as string)
-        || ["stationary_battery", "battery_rack", "inverter", "solar"].includes((target?.data as NodeData)?.kind as string);
-      let className = offline ? "offline" : "animated";
-      if (isPower && !offline) className = "power-cable animated";
+      const isPower = true;
+      let className = offline ? "offline" : "power-cable animated";
       setEdges(addEdge({ ...c, data: { isPower }, animated: !offline, className }, edges));
     },
     [nodes, edges, setEdges]

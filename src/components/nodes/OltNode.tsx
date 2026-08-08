@@ -14,42 +14,50 @@ export function OltNode({ id, data, selected }: NodeProps) {
     <motion.div
       initial={{ opacity: 0, y: 8, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={`group relative rounded-2xl glass min-w-[260px] ${selected ? "glow-cyan" : ""}`}
+      className={`group relative rounded-xl border-2 shadow-lg transition-all overflow-hidden ${
+        selected
+          ? "border-green-400 shadow-green-500/30"
+          : "border-green-900/60 hover:border-green-500/60"
+      }`}
+      style={{
+        minWidth: "260px",
+        background: "linear-gradient(135deg, #093318 0%, #0f5228 60%, #15803d 100%)",
+      }}
     >
-      <Handle type="target" position={Position.Top} />
-      <div className="flex items-center gap-3 px-4 pt-3.5">
-        <div className="grid place-items-center w-9 h-9 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
+      <Handle type="target" position={Position.Top} className="!bg-green-400 !w-3 !h-3 !border-2 !border-background" />
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-green-800/40" style={{ background: "rgba(21,128,61,0.2)" }}>
+        <div className="grid place-items-center w-9 h-9 rounded-lg bg-green-500/20 text-green-300 border border-green-400/30">
           <Activity className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-display font-semibold truncate">{d.name}</div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">OLT / GPON</div>
+          <div className="font-display font-semibold text-white truncate">{d.name}</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-green-300 font-medium">OLT / GPON</div>
         </div>
         <button
           onClick={() => remove(id)}
-          className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive p-1"
+          className="opacity-0 group-hover:opacity-100 transition text-green-300 hover:text-red-400 p-1"
           aria-label="Remover"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="px-4 pb-3 pt-3">
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
+      <div className="px-4 pb-3.5 pt-3">
+        <div className="flex items-center justify-between text-[11px] text-green-200/80 mb-1.5">
           <span>Portas PON</span>
-          <span className="font-mono text-foreground">{Math.min(used, d.ponPorts)}/{d.ponPorts}</span>
+          <span className="font-mono text-white">{Math.min(used, d.ponPorts)}/{d.ponPorts}</span>
         </div>
         <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${Math.min(d.ponPorts, 16)}, minmax(0,1fr))` }}>
           {Array.from({ length: d.ponPorts }).map((_, i) => (
             <div
               key={i}
-              className={`h-2 rounded-sm ${i < used ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-secondary"}`}
-              style={{ boxShadow: i < used ? undefined : "inset 0 0 0 1px var(--border)" }}
+              className={`h-2 rounded-sm ${i < used ? "bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-green-950/50"}`}
+              style={{ border: i < used ? undefined : "1px solid rgba(21,128,61,0.25)" }}
             />
           ))}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Bottom} className="!bg-green-400 !w-3 !h-3 !border-2 !border-background" />
     </motion.div>
   );
 }

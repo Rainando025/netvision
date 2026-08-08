@@ -8,11 +8,17 @@ export function BatteryRackNode({ id, data, selected }: { id: string; data: Batt
 
   return (
     <div
-      className={`relative min-w-[230px] bg-card/95 backdrop-blur-xl border-2 rounded-xl shadow-xl transition-all duration-300 ${
-        selected ? "border-yellow-500 shadow-yellow-500/20 scale-[1.02]" : "border-border/60 hover:border-border hover:shadow-2xl"
+      className={`group relative rounded-xl border-2 shadow-lg transition-all overflow-hidden ${
+        selected
+          ? "border-amber-400 shadow-amber-500/30 scale-[1.02]"
+          : "border-amber-900/60 hover:border-amber-500/60"
       }`}
+      style={{
+        minWidth: "230px",
+        background: "linear-gradient(135deg, #3d2504 0%, #5f3706 60%, #b45309 100%)",
+      }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3 bg-yellow-500 border-2 border-background" />
+      <Handle type="target" position={Position.Top} className="!bg-amber-400 !w-3 !h-3 !border-2 !border-background" />
 
       {/* Delete button */}
       <button
@@ -23,18 +29,18 @@ export function BatteryRackNode({ id, data, selected }: { id: string; data: Batt
         <X className="w-3 h-3" />
       </button>
 
-      <div className="p-4 flex flex-col gap-3 group">
+      <div className="p-4 flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-yellow-500/15 text-yellow-500 border border-yellow-500/30">
+          <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30">
             <BatteryCharging className="w-5 h-5" />
           </div>
-          <div className="flex-1">
-            <h3 className="font-display font-semibold text-sm text-foreground">{data.name}</h3>
-            <p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-bold uppercase tracking-wider">Banco de Baterias (48V)</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-display font-semibold text-sm text-white truncate">{data.name}</h3>
+            <p className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">Banco de Baterias (48V)</p>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); removeNode(id); }}
-            className="ml-auto p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            className="ml-auto p-1 rounded text-amber-300 hover:text-red-400 transition-colors"
             title="Remover"
           >
             <X className="w-3.5 h-3.5" />
@@ -42,18 +48,18 @@ export function BatteryRackNode({ id, data, selected }: { id: string; data: Batt
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-background/50 rounded p-2 text-center border border-border/50">
-            <span className="text-[10px] text-muted-foreground block mb-0.5">Qtd Baterias</span>
-            <span className="text-xs font-semibold text-foreground">4x 12V Estacionárias</span>
+          <div className="bg-amber-950/40 rounded p-2 text-center border border-amber-800/40">
+            <span className="text-[10px] text-amber-300 block mb-0.5">Qtd Baterias</span>
+            <span className="text-xs font-semibold text-white">4x 12V Estac.</span>
           </div>
-          <div className="bg-background/50 rounded p-2 text-center border border-border/50">
-            <span className="text-[10px] text-muted-foreground block mb-0.5">Tensão / Saída</span>
-            <span className="text-xs font-semibold text-yellow-600 dark:text-yellow-400">48V DC</span>
+          <div className="bg-amber-950/40 rounded p-2 text-center border border-amber-800/40">
+            <span className="text-[10px] text-amber-300 block mb-0.5">Tensão / Saída</span>
+            <span className="text-xs font-semibold text-amber-300">48V DC</span>
           </div>
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-yellow-500 border-2 border-background" />
+      <Handle type="source" position={Position.Bottom} className="!bg-amber-400 !w-3 !h-3 !border-2 !border-background" />
     </div>
   );
 }

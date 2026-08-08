@@ -113,7 +113,7 @@ export function AiAssistantDrawer({ isOpen, onClose }: AiAssistantDrawerProps) {
         const d = n.data as SwitchNodeData;
         return { name: d.name, type: d.switchType, ports: d.ports };
       });
-      
+
     return { equipmentList, connections, cameras, switches, linksCount: edges.length };
   };
 
@@ -170,14 +170,14 @@ export function AiAssistantDrawer({ isOpen, onClose }: AiAssistantDrawerProps) {
     const text = input.trim();
     if (!text || isLoading) return;
     setInput("");
-    
+
     let activeId = currentThreadId;
     if (!activeId) {
       const newThread = createThread();
       activeId = newThread.id;
       setCurrentThreadId(activeId);
     }
-    
+
     await sendMessage({ text });
   };
 
@@ -232,15 +232,14 @@ export function AiAssistantDrawer({ isOpen, onClose }: AiAssistantDrawerProps) {
                   <span className="truncate">{ctxBadge}</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowKeyConfig((prev) => !prev)}
-                  className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                    showKeyConfig || userApiKey
+                  className={`p-2 rounded-lg transition-colors cursor-pointer ${showKeyConfig || userApiKey
                       ? "text-primary bg-primary/10 border border-primary/20"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                  }`}
+                    }`}
                   title="Configurar Chave da API Gemini"
                 >
                   <Key className="w-4 h-4" />
@@ -290,7 +289,7 @@ export function AiAssistantDrawer({ isOpen, onClose }: AiAssistantDrawerProps) {
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
                     Insira sua chave gratuita obtida no Google AI Studio para ativar o assistente de IA no seu navegador.
                   </p>
-                  
+
                   <form onSubmit={handleSaveKey} className="space-y-2">
                     <div className="relative">
                       <input
@@ -433,11 +432,10 @@ function Message({ message }: { message: UIMessage }) {
       className={`flex gap-3.5 ${isUser ? "flex-row-reverse" : ""}`}
     >
       <div
-        className={`grid place-items-center w-7.5 h-7.5 rounded-lg border shrink-0 ${
-          isUser
+        className={`grid place-items-center w-7.5 h-7.5 rounded-lg border shrink-0 ${isUser
             ? "bg-accent/15 text-accent border-accent/30"
             : "bg-primary/15 text-primary border-primary/30"
-        }`}
+          }`}
       >
         {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
       </div>
